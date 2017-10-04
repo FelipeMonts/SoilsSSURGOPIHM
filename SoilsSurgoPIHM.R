@@ -40,22 +40,23 @@ setwd("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/WE-38/WE38_Files_PIHM_Cycles20
 ########### Call the library packages needed for the program to work #############
 
 # load libraries
-library(Hmisc)
-library(soilDB)
-library(plyr)
-library(raster)
-library(aqp)
-library(sp)
-library(rgdal)
-library(raster)
-library(rgeos)
-library(lattice)
-library(MASS)
+library(Hmisc) ;
+library(soilDB) ;
+library(plyr) ;
+library(raster) ;
+library(aqp) ;
+library(sp) ;
+library(rgdal) ;
+library(raster) ;
+library(rgeos) ; 
+library(lattice) ;
+library(MASS) ;
 library(RColorBrewer) ;
 library(ggplot2)  ;
 #library(tmap) ;
 library(dplyr)  ;
 library(tidyr)  ;
+library(devtools) ;
    
 
 
@@ -111,7 +112,7 @@ in.statement2 <- format_SQL_in_statement(MUKEYS$ID)
 
 # format query in SQL- raw data are returned
 
-Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement2," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
+Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement2," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
 
 # now get component and horizon-level data for these map unit keys
 Pedon.info<- SDA_query(Pedon.query);
@@ -126,5 +127,14 @@ depths(Pedon.info)<-id ~ top + bottom  ;
 str(Pedon.info) ;
 
 
-plot(Pedon.info[1:10], name='name', color='frag3to10_r')
+plot(Pedon.info[1:20], name='name', color='dbthirdbar_r')
+
+
+Pedon.info.df<-as(Pedon.info, 'data.frame')
+
+Pedon.info.df.dc<-Pedon.info.df[which(Pedon.info.df$majcompflag=='Yes'),]
+
+depths(Pedon.info.df.dc)<-id ~ top + bottom 
+
+plot(Pedon.info.df.dc[1:20], name='name', color='dbthirdbar_r')
 
