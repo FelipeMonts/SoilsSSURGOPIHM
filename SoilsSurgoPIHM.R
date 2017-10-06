@@ -118,23 +118,49 @@ Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct
 Pedon.info<- SDA_query(Pedon.query);
 head(Pedon.info) ;
 
-Pedon.info$id<-Pedon.info$mukey ;
-Pedon.info$top<-Pedon.info$hzdept_r ;
-Pedon.info$bottom<-Pedon.info$hzdepb_r ;
-Pedon.info$name<-Pedon.info$hzname ;
+# filter components that are the major components of each unit map with the Flag majcompflag=='Yes'
 
-depths(Pedon.info)<-id ~ top + bottom  ;
-str(Pedon.info) ;
+Pedon.info.MajorC<-Pedon.info[which(Pedon.info$majcompflag == 'Yes'),]  ;
+head(Pedon.info.MajorC) ; 
+
+# check if there are mukeys with more than one dominant component
+
+Pedon.info.MajorC$mukey.factor<-as.factor(Pedon.info.MajorC$mukey) ;
+
+Pedon.info.MajorC$cokey.factor<-as.factor(Pedon.info.MajorC$cokey) ;
+
+Pedon.info.MajorC$mukey_comppct_r<-paste(Pedon.info.MajorC$mukey.factor,Pedon.info.MajorC$comppct_r, sep = "_") ;
+
+# Select major component mukeys that have also the highest component percent comppct_r
+
+head(Pedon.info.MajorC)
+
+Dominant<- aggregate(comppct_r ~ mukey.factor, data=Pedon.info.MajorC, FUN="max" , drop=T, simplify=T) ;
+
+head(Dominant)
+
+Dominant$mukey_comppct_r<-paste(Dominant$mukey.factor,Dominant$comppct_r, sep ="_");
 
 
-plot(Pedon.info[1:20], name='name', color='dbthirdbar_r')
+Mukey.Pedon<-Pedon.info.MajorC[Pedon.info.MajorC$mukey_comppct_r %in% Dominant$mukey_comppct_r,]
 
 
-Pedon.info.df<-as(Pedon.info, 'data.frame')
 
-Pedon.info.df.dc<-Pedon.info.df[which(Pedon.info.df$majcompflag=='Yes'),]
+#  Transform the Pedon.info query in to the right format to be converted into a SoilProfileCollection object
+#   https://ncss-tech.github.io/AQP/aqp/aqp-intro.html
 
-depths(Pedon.info.df.dc)<-id ~ top + bottom 
 
-plot(Pedon.info.df.dc[1:20], name='name', color='dbthirdbar_r')
+#Pedon.info$id<-Pedon.info$mukey ;
+# Pedon.info$top<-Pedon.info$hzdept_r ;
+# Pedon.info$bottom<-Pedon.info$hzdept_r ;
+#Pedon.info$name<-Pedon.info$hzname ;
+
+depths(Mukey.Pedon)<-mukey ~ hzdept_r + hzdepb_r  ;
+str(Mukey.Pedon) ;
+
+
+plot(Mukey.Pedon[1:20], name='hzname',color='dbthirdbar_r')  ;
+
+
+
 
