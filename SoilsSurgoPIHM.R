@@ -36,13 +36,16 @@ setwd("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/WE-38/WE38_Files_PIHM_Cycles20
 # install.packages("RColorBrewer")
 # install.packages("latticeExtra")A
 # install.packages("reshape")
+# install.packages("dplyr")
+# install.packages("aqp")
 
 ########### Call the library packages needed for the program to work #############
 
 # load libraries
 library(Hmisc) ;
-library(soilDB) ;
 library(plyr) ;
+library(dplyr)  ;
+library(soilDB) ;
 library(raster) ;
 library(aqp) ;
 library(sp) ;
@@ -54,7 +57,6 @@ library(MASS) ;
 library(RColorBrewer) ;
 library(ggplot2)  ;
 #library(tmap) ;
-library(dplyr)  ;
 library(tidyr)  ;
 library(devtools) ;
    
@@ -112,7 +114,7 @@ in.statement2 <- format_SQL_in_statement(MUKEYS$ID)
 
 # format query in SQL- raw data are returned
 
-Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement2," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
+Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r,hzthk_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement2," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
 
 # now get component and horizon-level data for these map unit keys
 Pedon.info<- SDA_query(Pedon.query);
@@ -144,6 +146,13 @@ Dominant$mukey_comppct_r<-paste(Dominant$mukey.factor,Dominant$comppct_r, sep ="
 
 Mukey.Pedon<-Pedon.info.MajorC[Pedon.info.MajorC$mukey_comppct_r %in% Dominant$mukey_comppct_r,]
 
+# Creating Mukey ID for each dominant component
+
+
+Mukey.Pedon$mukey_ID<-as.character(Mukey.Pedon$mukey) ;
+
+
+str(Mukey.Pedon)
 
 
 #  Transform the Pedon.info query in to the right format to be converted into a SoilProfileCollection object
@@ -155,12 +164,45 @@ Mukey.Pedon<-Pedon.info.MajorC[Pedon.info.MajorC$mukey_comppct_r %in% Dominant$m
 # Pedon.info$bottom<-Pedon.info$hzdept_r ;
 #Pedon.info$name<-Pedon.info$hzname ;
 
-depths(Mukey.Pedon)<-mukey ~ hzdept_r + hzdepb_r  ;
+depths(Mukey.Pedon)<-mukey_ID ~ hzdept_r + hzdepb_r  ;
 str(Mukey.Pedon) ;
 
 
 plot(Mukey.Pedon[1:20], name='hzname',color='dbthirdbar_r')  ;
 
 
+# Add soil profile depth  soil.depth
 
+
+
+Mukey.Pedon$soil.depth <-  profileApply(Mukey.Pedon, FUN=max) ; 
+
+
+Mukey.Pedon$hzthickns_r<-Mukey.Pedon$hzdepb_r-Mukey.Pedon$hzdept_r  ;
+
+
+
+# Add soil thickness x soil bulk density (hzthickns_r *dbthirdbar_r) to estimate weight average clay,silt sand content
+
+Mukey.Pedon$hzthickns_dbthirdbar<-(Mukey.Pedon$hzthickns_r*Mukey.Pedon$dbthirdbar_r)  ;
+
+str(Mukey.Pedon)
+
+diagnostic_hz(Mukey.Pedon)
+
+
+sliced<-aqp::slice(Mukey.Pedon[1:10], fm = 0:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r) ;
+
+
+sliced2<-aqp::slice(Mukey.Pedon[1:10], fm = seq(0,max(Mukey.Pedon),by=10) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r) ;
+
+sliced2@horizons$hzdepb_r<-sliced2@horizons$hzdept_r+10
+
+plot(sliced2, name='hzname', color ='dbthirdbar_r' )
+
+print(sliced)
+
+sliced
+
+seq(0,max(Mukey.Pedon),by=10)
 
