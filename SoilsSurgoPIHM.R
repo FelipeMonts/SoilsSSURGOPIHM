@@ -59,6 +59,8 @@ library(ggplot2)  ;
 #library(tmap) ;
 library(tidyr)  ;
 library(devtools) ;
+library(stats)
+
    
 
 
@@ -119,11 +121,15 @@ Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct
 # now get component and horizon-level data for these map unit keys
 Pedon.info<- SDA_query(Pedon.query);
 head(Pedon.info) ;
+str(Pedon.info)  ;
 
 # filter components that are the major components of each unit map with the Flag majcompflag=='Yes'
 
 Pedon.info.MajorC<-Pedon.info[which(Pedon.info$majcompflag == 'Yes'),]  ;
 head(Pedon.info.MajorC) ; 
+str(Pedon.info.MajorC)  ;
+
+
 
 # check if there are mukeys with more than one dominant component
 
@@ -135,16 +141,21 @@ Pedon.info.MajorC$mukey_comppct_r<-paste(Pedon.info.MajorC$mukey.factor,Pedon.in
 
 # Select major component mukeys that have also the highest component percent comppct_r
 
-head(Pedon.info.MajorC)
+head(Pedon.info.MajorC)  ;
 
 Dominant<- aggregate(comppct_r ~ mukey.factor, data=Pedon.info.MajorC, FUN="max" , drop=T, simplify=T) ;
 
-head(Dominant)
+head(Dominant)  ;
+
+str(Dominant) ;
 
 Dominant$mukey_comppct_r<-paste(Dominant$mukey.factor,Dominant$comppct_r, sep ="_");
 
 
-Mukey.Pedon<-Pedon.info.MajorC[Pedon.info.MajorC$mukey_comppct_r %in% Dominant$mukey_comppct_r,]
+Mukey.Pedon<-Pedon.info.MajorC[Pedon.info.MajorC$mukey_comppct_r %in% Dominant$mukey_comppct_r,]  ;
+
+str(Mukey.Pedon) ;
+
 
 # Creating Mukey ID for each dominant component
 
@@ -152,7 +163,7 @@ Mukey.Pedon<-Pedon.info.MajorC[Pedon.info.MajorC$mukey_comppct_r %in% Dominant$m
 Mukey.Pedon$mukey_ID<-as.character(Mukey.Pedon$mukey) ;
 
 
-str(Mukey.Pedon)
+str(Mukey.Pedon);
 
 
 #  Transform the Pedon.info query in to the right format to be converted into a SoilProfileCollection object
@@ -180,23 +191,75 @@ Mukey.Pedon$soil.depth <-  profileApply(Mukey.Pedon, FUN=max) ;
 
 Mukey.Pedon$hzthickns_r<-Mukey.Pedon$hzdepb_r-Mukey.Pedon$hzdept_r  ;
 
+str(Mukey.Pedon) ;
+
+# add total soil depth to each horizon
+
+Mukey.Pedon@horizons<-merge(Mukey.Pedon@horizons, Mukey.Pedon@site, by.x='mukey', by.y='mukey_ID') ;
 
 
-# Add soil thickness x soil bulk density (hzthickns_r *dbthirdbar_r) to estimate weight average clay,silt sand content
+str(Mukey.Pedon) ;
 
-Mukey.Pedon$hzthickns_dbthirdbar<-(Mukey.Pedon$hzthickns_r*Mukey.Pedon$dbthirdbar_r)  ;
+# # Add soil thickness x soil bulk density / soil.depth (hzthickns_r *dbthirdbar_r)/soil.depth to estimate weight average clay,silt sand content
+# 
+# Mukey.Pedon$hzthickns_dbthirdbar_soil.depth<-(Mukey.Pedon$hzthickns_r*Mukey.Pedon$dbthirdbar_r)/Mukey.Pedon@horizons$soil.depth  ;
+# 
+# str(Mukey.Pedon) ;
+# 
+# 
 
-str(Mukey.Pedon)
-
-diagnostic_hz(Mukey.Pedon)
 
 
-sliced<-aqp::slice(Mukey.Pedon[1:10], fm = 0:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r) ;
+######### Use the slice tool to divide the horizons into 1 cm layers and sum the components (clay, sand, silt) multiplied by 
+#########  the thincknes (1cm) and the bulk density dbthirdbar_r to obtain the wieghted clay, sand, etc for pihm
 
 
-sliced2<-aqp::slice(Mukey.Pedon[1:10], fm = seq(0,max(Mukey.Pedon),by=10) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r) ;
 
-sliced2@horizons$hzdepb_r<-sliced2@horizons$hzdept_r+10
+sliced<-aqp::slice(Mukey.Pedon[1:10], fm = 0:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r  + soil.depth +mukey.factor ) ;
+
+plot(sliced, name='hzname', color='om_r') ;
+
+str(sliced) ;
+
+######   multiply the thincknes (1cm) and the bulk density dbthirdbar_r to obtain the wieghted component
+
+sliced$sand_weights <- (sliced$sandtotal_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
+
+sliced$silt_weights <- (sliced$silttotal_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
+
+sliced$clay_weights <- (sliced$claytotal_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
+
+sliced$om_weights <- (sliced$om_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
+
+sliced$bulkd_weights <- (sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
+
+
+##### sum the weighted component 1 cm layers  to obtained the weighted average component
+
+str(sliced)
+
+sliced@site$SAND<- profileApply(sliced, FUN=function(x) sum(x$sand_weights, na.rm=T), simplify = T) ;
+
+sliced@site$SILT<- profileApply(sliced, FUN=function(x) sum(x$silt_weights, na.rm=T), simplify = T) ;
+
+sliced@site$CLAY<- profileApply(sliced, FUN=function(x) sum(x$clay_weights, na.rm=T), simplify = T) ;
+
+sliced@site$OM<- profileApply(sliced, FUN=function(x) sum(x$om_weights, na.rm=T), simplify = T) ;
+
+sliced@site$BULKD<- profileApply(sliced, FUN=function(x) sum(x$bulkd_weights, na.rm=T), simplify = T) ;
+
+
+
+
+# sliced2<-aqp::slice(Mukey.Pedon[1:10], fm = seq(0,max(Mukey.Pedon),by=10) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r) ;
+# 
+# sliced2@horizons$hzdepb_r<-sliced2@horizons$hzdept_r+10
+
+
+
+
+# add total soil depth to each horizon
+
 
 plot(sliced2, name='hzname', color ='dbthirdbar_r' )
 
@@ -204,5 +267,16 @@ print(sliced)
 
 sliced
 
+
+
+hrz$soil.dpt
+sldpth
+
+str(sldpth)
+str(hrz)
+
 seq(0,max(Mukey.Pedon),by=10)
+sldpth$mukey<-as.numeric(sldpth$mukey_ID)
+
+Mukey.Pedon@horizons<-merge(Mukey.Pedon@horizons, Mukey.Pedon@site, by.x='mukey', by.y='mukey_ID') ;
 
