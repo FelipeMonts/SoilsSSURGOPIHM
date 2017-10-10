@@ -215,39 +215,45 @@ str(Mukey.Pedon) ;
 
 
 
-sliced<-aqp::slice(Mukey.Pedon[1:10], fm = 0:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r  + soil.depth +mukey.factor ) ;
+sliced<-aqp::slice(Mukey.Pedon[1:10], fm = 0:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r  + soil.depth + mukey.factor ) ;
 
-plot(sliced, name='hzname', color='om_r') ;
+plot(sliced[1:5], name='hzname', color='om_r') ;
 
 str(sliced) ;
 
-######   multiply the thincknes (1cm) and the bulk density dbthirdbar_r to obtain the wieghted component
 
-sliced$sand_weights <- (sliced$sandtotal_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
-
-sliced$silt_weights <- (sliced$silttotal_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
-
-sliced$clay_weights <- (sliced$claytotal_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
-
-sliced$om_weights <- (sliced$om_r*sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
-
-sliced$bulkd_weights <- (sliced$dbthirdbar_r)/sliced@horizons$soil.depth ;
-
+######   multiply the thincknes (1cm) and the bulk density dbthirdbar_r to the component percentage to obtain the weighted component
 
 ##### sum the weighted component 1 cm layers  to obtained the weighted average component
 
-str(sliced)
 
-sliced@site$SAND<- profileApply(sliced, FUN=function(x) sum(x$sand_weights, na.rm=T), simplify = T) ;
+sliced@site$SOIL_MASS<- profileApply(sliced, FUN=function(x) sum(x$dbthirdbar_r, na.rm=T), simplify = T) ;
 
-sliced@site$SILT<- profileApply(sliced, FUN=function(x) sum(x$silt_weights, na.rm=T), simplify = T) ;
+sliced@site$SANDMASS<- profileApply(sliced, FUN=function(x) sum((x$sandtotal_r*x$dbthirdbar_r)/100, na.rm=T), simplify = T) ;
 
-sliced@site$CLAY<- profileApply(sliced, FUN=function(x) sum(x$clay_weights, na.rm=T), simplify = T) ;
+sliced@site$SILTMASS<- profileApply(sliced, FUN=function(x) sum((x$silttotal_r*x$dbthirdbar_r)/100, na.rm=T), simplify = T) ;
 
-sliced@site$OM<- profileApply(sliced, FUN=function(x) sum(x$om_weights, na.rm=T), simplify = T) ;
+sliced@site$CLAYMASS<- profileApply(sliced, FUN=function(x) sum((x$claytotal_r*x$dbthirdbar_r)/100, na.rm=T), simplify = T) ;
 
-sliced@site$BULKD<- profileApply(sliced, FUN=function(x) sum(x$bulkd_weights, na.rm=T), simplify = T) ;
+sliced@site$OM_MASS<- profileApply(sliced, FUN=function(x) sum((x$om_r*x$dbthirdbar_r)/100, na.rm=T), simplify = T) ;
 
+
+sliced@site$SAND<-(sliced@site$SANDMASS/sliced@site$SOIL_MAS)*100   ;
+
+sliced@site$SILT<-(sliced@site$SILTMASS/sliced@site$SOIL_MAS)*100   ;
+
+sliced@site$CLAY<-(sliced@site$CLAYMASS/sliced@site$SOIL_MAS)*100   ;
+
+sliced@site$TEXTURE_CHECK<-sliced@site$SAND + sliced@site$SILT + sliced@site$CLAY ;
+
+
+sliced@site$OM<- (sliced@site$OM_MASS/sliced@site$SOIL_MAS)*100   ;
+
+sliced@site$BULKD<-sliced@site$SOIL_MASS/sliced@site$soil.depth ;
+
+
+
+head(sliced@site)
 
 
 
@@ -258,25 +264,5 @@ sliced@site$BULKD<- profileApply(sliced, FUN=function(x) sum(x$bulkd_weights, na
 
 
 
-# add total soil depth to each horizon
 
-
-plot(sliced2, name='hzname', color ='dbthirdbar_r' )
-
-print(sliced)
-
-sliced
-
-
-
-hrz$soil.dpt
-sldpth
-
-str(sldpth)
-str(hrz)
-
-seq(0,max(Mukey.Pedon),by=10)
-sldpth$mukey<-as.numeric(sldpth$mukey_ID)
-
-Mukey.Pedon@horizons<-merge(Mukey.Pedon@horizons, Mukey.Pedon@site, by.x='mukey', by.y='mukey_ID') ;
 
