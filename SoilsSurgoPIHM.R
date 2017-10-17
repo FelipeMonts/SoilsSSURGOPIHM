@@ -313,6 +313,8 @@ head(sliced@site)
 
 HansYoust_Soil<-sliced@site[, c("mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")] ;
 
+HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")], digits=8)
+
 names(HansYoust_Soil)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD'); 
 
 str(HansYoust_Soil) ;
@@ -330,9 +332,11 @@ str(Mukey.deepest) ;
 
 HansYoust_Geology<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
 
+
+
 names(HansYoust_Geology)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD'); 
 
-Mukey.deepest.NA<-Mukey.deepst[is.na(Mukey.deepst$claytotal_r),'mukey_ID']  ;
+Mukey.deepest.NA<-Mukey.deepest[is.na(Mukey.deepest$claytotal_r),'mukey_ID']  ;
 
 ###    Some horizons do not have complete data for the deepest layer. Therefore the nest step is to
 ### take the data from the layer inmediately above the deepest 
@@ -349,4 +353,23 @@ names(Mukey.deepest_1)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
 
 HansYoust_Geology[HansYoust_Geology$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest_1  ;
 
+HansYoust_Geology[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(HansYoust_Geology[, c('SILT',  'CLAY',	'OM',	'BD')], digits=8)
+
+
 str(HansYoust_Geology) ;
+
+
+#############################################################################################################################
+#
+#
+####################### Write the soil and geology data in the format approptiate fro PIHM  can take#############################
+
+
+write.table(HansYoust_Soil,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t") ;
+
+
+write.table(HansYoust_Geology,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t") ;
+
+
+
+
