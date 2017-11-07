@@ -110,13 +110,29 @@ str(HansYoust.GSSURGO@data) ;
 #### Extract the Mukeys corresponding to the mode in each mesh triangle
 
 
-MUKEYS.mode<-as.factor(HansYoust.GSSURGO@data$SSURGO_mod) ;
+HansYoust.GSSURGO@data$MUKEYS.mode<-as.factor(HansYoust.GSSURGO@data$SSURGO_mod) ;
 
-MUKEYS<-levels(MUKEYS.mode)  ;
+MUKEYS<-levels(HansYoust.GSSURGO@data$MUKEYS.mode)  ;
+
+str(MUKEYS)
+
+HansYoust.GSSURGO@data$MUKEYS.index<-HansYoust.GSSURGO@data$MUKEYS.mode ;
+
+MUKEYS.INDX<-levels(HansYoust.GSSURGO@data$MUKEYS.index)<-seq(1:length(levels(HansYoust.GSSURGO@data$MUKEYS.index))) 
+
+MUKEYS.map.1<-HansYoust.GSSURGO@data[,c('Ele_ID', 'MUKEYS.mode', 'MUKEYS.index')]  ;
+
+MUKEYS.map.2<-data.frame(MUKEYS.INDX,MUKEYS) ;
+
+str(MUKEYS.map.1)
+
+str(MUKEYS.map.2)
 
 
 
+write.table(MUKEYS.map.1,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_MUKEYS_Map.txt", row.names=F , quote=F, sep = "\t") ;
 
+write.table(MUKEYS.map.2,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_MUKEYS_INDX.txt", row.names=F , quote=F, sep = "\t") ;
 
 ################################ Query the Soil Data access database with SQL through R #################
 
@@ -230,7 +246,7 @@ plot(Mukey.Pedon, name='hzname',color='dbthirdbar_r')  ;
 
 
 
-Mukey.Pedon$soil.depth <-  profileApply(Mukey.Pedon, FUN=max) ; 
+Mukey.Pedon$soil.depth<-profileApply(Mukey.Pedon, FUN=max) ; 
 
 
 Mukey.Pedon$hzthickns_r<-Mukey.Pedon$hzdepb_r-Mukey.Pedon$hzdept_r  ;
@@ -310,14 +326,19 @@ head(sliced@site)
 
 
 ####### write the soils data in a format that PIHM can read trough the Data model Loader step in PIHM-GIS
+####### include an index to replace the MUKEY with the indexs, as PIHM does not read the MUKEYS and needs an integer index instead
 
-HansYoust_Soil<-sliced@site[, c("mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")] ;
 
-HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")], digits=8)
 
-names(HansYoust_Soil)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD'); 
+HansYoust_Soil<-merge(sliced@site[, c("mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")], MUKEYS.map.2, by.x='mukey_ID', by.y='MUKEYS', all=T) ;
+
+HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")], digits=4)
+
+names(HansYoust_Soil)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
 
 str(HansYoust_Soil) ;
+
+head(HansYoust_Soil) ;
 
 ############################################################################################################################
 ########################################################################################################################################################################################################################################################
@@ -330,11 +351,11 @@ Mukey.deepest<-Mukey.Pedon@horizons[Mukey.Pedon@horizons$hzdepb_r == Mukey.Pedon
 
 str(Mukey.deepest) ;
 
-HansYoust_Geology<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
+HansYoust_deepest<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
 
 
 
-names(HansYoust_Geology)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD'); 
+names(HansYoust_deepest)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD'); 
 
 Mukey.deepest.NA<-Mukey.deepest[is.na(Mukey.deepest$claytotal_r),'mukey_ID']  ;
 
@@ -351,13 +372,21 @@ Mukey.deepest_1<-Mukey.deepest.2[which(Mukey.deepest.2$hzdepb_r == Mukey.deepest
 names(Mukey.deepest_1)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
 
 
-HansYoust_Geology[HansYoust_Geology$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest_1  ;
+HansYoust_deepest[HansYoust_deepest$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest_1  ;
 
-HansYoust_Geology[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(HansYoust_Geology[, c('SILT',  'CLAY',	'OM',	'BD')], digits=8)
+HansYoust_deepest[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(HansYoust_deepest[, c('SILT',  'CLAY',	'OM',	'BD')], digits=4)
 
+####### write the geology data in a format that PIHM can read trough the Data model Loader step in PIHM-GIS
+####### include an index to replace the MUKEY with the index, as PIHM does not read the MUKEYS and needs an integer index instead
+
+
+HansYoust_Geology<-merge(HansYoust_deepest, MUKEYS.map.2, by.x='MUKEY', by.y='MUKEYS', all=T) ;
+
+names(HansYoust_Geology)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX')
 
 str(HansYoust_Geology) ;
 
+head(HansYoust_Geology)  ;
 
 #############################################################################################################################
 #
@@ -365,10 +394,10 @@ str(HansYoust_Geology) ;
 ####################### Write the soil and geology data in the format approptiate fro PIHM  can take#############################
 
 
-write.table(HansYoust_Soil,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t") ;
+write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM',	'BD', 'MUKEY')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t") ;
 
 
-write.table(HansYoust_Geology,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t") ;
+write.table(HansYoust_Geology[,c('INDEX','SILT',  'CLAY',	'OM',	'BD', 'MUKEY')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t") ;
 
 
 
