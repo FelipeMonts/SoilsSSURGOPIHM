@@ -16,8 +16,14 @@
 
 #  Set Working directory
 
+setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs')   
 
-setwd("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/WE-38/WE38_Files_PIHM_Cycles20170208/SWATPIHMRcode") ; 
+#  Windows.Directory<-gsub("\\\\", "/", readClipboard())
+#  C:\Felipe\PIHM-CYCLES\PIHM\PIHM_Felipe\CNS\Manhantango\HydroTerreFullManhantango\HansYostDeepCreek\Aug2920171550
+
+#  C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/WE-38/WE38_Files_PIHM_Cycles20170208/SWATPIHMRcode 
+
+
 
 ########### Install packages  #####################
 
@@ -340,6 +346,56 @@ str(HansYoust_Soil) ;
 
 head(HansYoust_Soil) ;
 
+NUMSOIL<-dim(HansYoust_Soil)[1]  ;
+
+NUMSOIL<-data.frame(c('NUMSOIL'), dim(HansYoust_Soil)[1]) ;
+
+##### Adding the additional columns for the new PIHM-MM module inputs
+
+HansYoust_Soil$KINF<-HansYoust_Soil$KSATV<-HansYoust_Soil$KSATH<-HansYoust_Soil$MAXSMC<-HansYoust_Soil$MINSMC<-HansYoust_Soil$ALPHA<-HansYoust_Soil$BETA<-HansYoust_Soil$MACHF<-HansYoust_Soil$MACVF<-HansYoust_Soil$DMAC<-HansYoust_Soil$QTZ<- -999 ;
+
+
+##########################################################################################################################
+##
+## some of the dominan components Mukeys do no have data vailable. The strategy to fill these gaps is to gte the average of the Mukeys parameters of the neighboring Triangles.
+##
+##########################################################################################################################
+
+HansYoust_Soil_NA<-data.frame(which(is.na(HansYoust_Soil), arr.ind=T)) ;
+
+
+
+Mukey_Gaps<-HansYoust_Soil[unique(unique(HansYoust_Soil_NA$row)),'MUKEY'] ;
+
+
+##### Find the soil index  and the triangles that have Mukeys corresponding to the Mukey_Gaps
+
+Mukey_Gaps_indx<-MUKEYS.map.1[MUKEYS.map.1$MUKEYS.mode ==Mukey_Gaps, ]    ;
+
+
+###### Find the neighboring triangles of the Triangles with the Mukey_Gaps 
+
+
+Mukey_Gaps_indx_neighbors<-mesh.Elements[mesh.Elements$Index %in% Mukey_Gaps_indx$Ele_ID,]
+
+
+unlist(Mukey_Gaps_indx_neighbors[,c('Nabr.0' , 'Nabr.1' , 'Nabr.2')], recursive = T)
+
+
+MUKEYS.map.1[MUKEYS.map.1$Ele_ID %in% as.vector(Mukey_Gaps_indx_neighbors[1,c('Nabr.0' , 'Nabr.1' , 'Nabr.2')],mode='numeric'),]
+
+# Mukey_Gaps_List<-split(Mukey_Gaps_indx_neighbors,seq(nrow(Mukey_Gaps_indx_neighbors))) ;
+# 
+# lengths(Mukey_Gaps_List)
+# 
+
+
+as.vector(Mukey_Gaps_List [[1]][,c(5,6,7)],mode='numeric')
+
+
+
+
+
 ############################################################################################################################
 ########################################################################################################################################################################################################################################################
 
@@ -388,17 +444,27 @@ str(HansYoust_Geology) ;
 
 head(HansYoust_Geology)  ;
 
+NUMGEOL<-data.frame(c('NUMGEOL'), dim(HansYoust_Geology)[1]) ;
+
+##### Adding the additional columns for the new PIHM-MM module inputs
+
+HansYoust_Geology$KINF<-HansYoust_Geology$KSATV<-HansYoust_Geology$KSATH<-HansYoust_Geology$MAXSMC<-HansYoust_Geology$MINSMC<-HansYoust_Geology$ALPHA<-HansYoust_Geology$BETA<-HansYoust_Geology$MACHF<-HansYoust_Geology$MACVF<-HansYoust_Geology$DMAC<-HansYoust_Geology$QTZ<- -999 ;
+
+
+
 #############################################################################################################################
 #
 #
 ####################### Write the soil and geology data in the format approptiate fro PIHM  can take#############################
 
 
-write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM',	'BD', 'MUKEY')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t") ;
+write.table(NUMSOIL,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t", col.names=F) ;
+
+write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t", append= T) ;
 
 
-write.table(HansYoust_Geology[,c('INDEX','SILT',  'CLAY',	'OM',	'BD', 'MUKEY')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t") ;
+write.table(NUMGEOL , file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t", col.names=F ) ;
 
 
-
+write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t", append= T) ;
 
