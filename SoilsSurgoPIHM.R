@@ -24,6 +24,30 @@ setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs')
 #  C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/WE-38/WE38_Files_PIHM_Cycles20170208/SWATPIHMRcode 
 
 
+####### Store the name of the project to read and write files more easily #############
+
+Project<-"MergeVectorLayer000_q30_a200000"   ;
+
+
+
+load(paste0('./',Project,'/PIHMInputsR.RData'));
+
+
+
+######## Store the name of the directory whre the modified MM-PIHM inputs are to be stored
+
+
+#dir.create(Project);
+
+
+RevisedOutputs.dir<-paste0('./',Project,'/') ;
+
+
+
+
+# Create the path to read the input files by pasting RevisedOutputs.dir and the Project name together with the file ".name" ie ".mesh"
+
+inputfile.name<-paste0(RevisedOutputs.dir,Project) ;
 
 ########### Install packages  #####################
 
@@ -135,10 +159,11 @@ str(MUKEYS.map.1)
 str(MUKEYS.map.2)
 
 
+paste0(inputfile.name, '.ATT')
 
-write.table(MUKEYS.map.1,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_MUKEYS_Map.txt", row.names=F , quote=F, sep = "\t") ;
+write.table(MUKEYS.map.1,file=paste0(inputfile.name, '_MUKEYS_MAP.txt'), row.names=F , quote=F, sep = "\t") ;
 
-write.table(MUKEYS.map.2,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_MUKEYS_INDX.txt", row.names=F , quote=F, sep = "\t") ;
+write.table(MUKEYS.map.2,file=paste0(inputfile.name, '_MUKEYS_INDX.txt'), row.names=F , quote=F, sep = "\t") ;
 
 ################################ Query the Soil Data access database with SQL through R #################
 
@@ -394,11 +419,11 @@ Neighbor_Mukeys_avg<-apply(Neighbor_Mukeys_para, MARGIN = c(2), FUN = 'mean') ;
 
 HansYoust_Soil[HansYoust_Soil$MUKEY == Mukey_Gaps,c('SILT' , 'CLAY' , 'OM' ,  'BD') ] <-Neighbor_Mukeys_avg ;
 
-######## Need to replace the other triangles that have the same my key
+######## Need to replace the other triangles that have the same mukey
 
 Neighbor_Mukeys_2<-unlist(Mukey_Gaps_indx_neighbors[2,c('Nabr.0' , 'Nabr.1' , 'Nabr.2')],use.names = F, recursive=T)  ;
 
-Neighbor_Mukeys<-MUKEYS.map.1[MUKEYS.map.1$Ele_ID %in% Neighbor_Mukeys_2, ]
+Neighbor_Mukeys<-MUKEYS.map.1[MUKEYS.map.1$Ele_ID %in% Neighbor_Mukeys_2, ]    ;
 
 Neighbor_Mukeys_para<-HansYoust_Soil[HansYoust_Soil$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
 
@@ -522,30 +547,17 @@ NUMSOIL<-data.frame(c('NUMSOIL'), dim(HansYoust_Soil)[1]) ;
 NUMGEOL<-data.frame(c('NUMGEOL'), dim(HansYoust_Geology)[1]) ;
 
 
-write.table(NUMSOIL,file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t", col.names=F) ;
+write.table(NUMSOIL,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", col.names=F) ;
 
-write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Soil.txt", row.names=F , quote=F, sep = "\t", append= T) ;
-
-
-write.table(NUMGEOL , file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t", col.names=F ) ;
+write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
 
 
-write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t", append= T) ;
+write.table(NUMGEOL , file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", col.names=F ) ;
 
 
-#############################################################################################################################
-
-#   Still need to corret the attribute tables with the correct soil index in the triangles that do have MUKEYs Gaps
-
-#############################################################################################################################
-
-Mukey_Gaps_indx[2,]  ;
+write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
 
 
-Revised.att[Revised.att$Index %in% Mukey_Gaps_indx[,'Ele_ID'],] [2,c('Soil' , 'Geol')]<-dim(HansYoust_Soil)[1]  ;
-
-write.table(Revised.att[,c('Index', 'MUKEYS.index', 'MUKEYS.index', 'LC','METEO', 'LAI','S', 'BC.0', 'BC.1', 'BC.2')], file=paste0(inputfile.name, '.ATT') , row.names=F, col.names=c('INDEX' , 'SOIL' , 'GEOL' ,	'LC' ,	'METEO' ,	'LAI',	'SS' ,	'BC0' ,	'BC1' ,	'BC2'), quote=F , sep = "\t" ) ;
-
-
-####################### done for now #################################################################################
+# 
+# ####################### done for now #################################################################################
 
