@@ -551,11 +551,26 @@ write.table(NUMSOIL,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quot
 
 write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
 
+####################  Add DINF , KMACV_RO  and KMACH_RO  at the end of the soil file ################
+# DINF (type: double, unit: m) A virtual top soil layer thickness across which infiltration is calculated.
+# KMACV RO (type: double, unit: dimensionless) Ratio between vertical macropore hydraulic conduc-
+#   tivity and vertical saturated infiltration hydraulic conductivity.
+# KMACH RO (type: double, unit: dimensionless) Ratio between horizontal macropore hydraulic con-
+#   ductivity and horizontal saturated hydraulic conductivity.
 
-write.table(NUMGEOL , file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", col.names=F ) ;
+DINF_etc<-data.frame(c('DINF' , 'KMACV_RO', 'KMACH_RO'), c( 0.10, 100.0 , 1000.0 )) ;
+
+write.table(DINF_etc,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , col.names=F ,quote=F, sep = "\t", append= T) ;
+
+DINF        0.10
+KMACV_RO    100.0
+KMACH_RO    1000.0
 
 
-write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
+write.table(DINF_etc, file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", col.names=F, append= T ) ;
+
+
+
 
 
 # 
