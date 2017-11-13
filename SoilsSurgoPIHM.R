@@ -513,15 +513,6 @@ HansYoust_Geology[dim(HansYoust_Geology)[1],!names(HansYoust_Geology) %in% c( 'M
 
 
 #############################################################################################################################
-
-#   Still need to corret the attribute tables with the correct soil index in the triangles that do have MUKEYs Gaps
-
-#############################################################################################################################
-
-
-
-
-#############################################################################################################################
 #
 #
 ####################### Write the soil and geology data in the format approptiate for PIH to take #############################
@@ -540,4 +531,21 @@ write.table(NUMGEOL , file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantan
 
 
 write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HansYoust_Geology.txt", row.names=F , quote=F, sep = "\t", append= T) ;
+
+
+#############################################################################################################################
+
+#   Still need to corret the attribute tables with the correct soil index in the triangles that do have MUKEYs Gaps
+
+#############################################################################################################################
+
+Mukey_Gaps_indx[2,]  ;
+
+
+Revised.att[Revised.att$Index %in% Mukey_Gaps_indx[,'Ele_ID'],] [2,c('Soil' , 'Geol')]<-dim(HansYoust_Soil)[1]  ;
+
+write.table(Revised.att[,c('Index', 'MUKEYS.index', 'MUKEYS.index', 'LC','METEO', 'LAI','S', 'BC.0', 'BC.1', 'BC.2')], file=paste0(inputfile.name, '.ATT') , row.names=F, col.names=c('INDEX' , 'SOIL' , 'GEOL' ,	'LC' ,	'METEO' ,	'LAI',	'SS' ,	'BC0' ,	'BC1' ,	'BC2'), quote=F , sep = "\t" ) ;
+
+
+####################### done for now #################################################################################
 
