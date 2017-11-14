@@ -379,7 +379,7 @@ HansYoust_Soil$KINF<-HansYoust_Soil$KSATV<-HansYoust_Soil$KSATH<-HansYoust_Soil$
 
 ##########################################################################################################################
 ##
-## some of the dominant components Mukeys do no have data vailable. The strategy to fill these gaps is to gte the average of the Mukeys parameters of the neighboring Triangles.
+## some of the dominant components Mukeys do no have data available. The strategy to fill these gaps is to gte the average of the Mukeys parameters of the neighboring Triangles.
 ##
 ##########################################################################################################################
 
@@ -440,11 +440,12 @@ HansYoust_Soil[dim(HansYoust_Soil)[1],!names(HansYoust_Soil) %in% c( 'MUKEY' ,'S
 
 
 
-############################################################################################################################
-########################################################################################################################################################################################################################################################
-
-############################# Prepare the Geology data for PIHM based on the properties of the depest layer of the horizon
-############################# of the dominant components of each map unit selected by the procedure used for soils data
+# ###########################################################################################################################
+# 
+# ###     Prepare the Geology data for PIHM based on the properties of the depest layer of the horizon
+# ###     of the dominant components of each map unit selected by the procedure used for soils data
+# 
+# ###########################################################################################################################
 
 
 Mukey.deepest<-Mukey.Pedon@horizons[Mukey.Pedon@horizons$hzdepb_r == Mukey.Pedon@horizons$soil.depth,]  ;
@@ -575,4 +576,160 @@ write.table(DINF_etc, file=paste0(inputfile.name, '_Geology.txt'), row.names=F ,
 
 # 
 # ####################### done for now #################################################################################
+
+
+
+# ###########################################################################################################################
+# 
+# ###     Prepare depth to bed rock data to be incorporated into the mesh file when a uniform soil profile depth
+# ###     is not what is desired 
+# 
+# ###########################################################################################################################
+
+##### Read the nodes and the corresponding Mukey from the TX file formed from Qgis
+
+
+HansYoust.Nodes.Mukeys.info<-ogrInfo(paste0(RevisedOutputs.dir, 'NodesMukeys.shp'));
+
+
+HansYoust.Nodes.Mukeys<-readOGR(paste0(RevisedOutputs.dir, 'NodesMukeys.shp'))  ;
+
+str(HansYoust.Nodes.Mukeys)  ;
+
+
+
+#### Extract the Mukeys corresponding to each Node
+
+
+HansYoust.Nodes.Mukeys@data$Mukey.factor<-as.factor(HansYoust.Nodes.Mukeys$Mukeys) ;
+
+head(HansYoust.Nodes.Mukeys@data) 
+
+####  Convert the Mukeys into a factor and extract the levels of the factor to get theM Mukeys from which we need soil 
+####  bedrock information
+
+NODE.MUKEYS<-levels(HansYoust.Nodes.Mukeys@data$Mukey.factor)  ;
+
+str(NODE.MUKEYS)
+
+
+
+################################ Query the Soil Data access database with SQL through R #################
+
+
+# extract the map unit keys from the RAT, and format for use in an SQL IN-statement
+#in.statement2 <- format_SQL_in_statement(MUKEYS$ID); 
+
+in.statement3 <- format_SQL_in_statement(NODE.MUKEYS); 
+
+
+# format query in SQL- raw data are returned
+
+Pedon.Nodes.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r,hzthk_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement3," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
+
+# now get component and horizon-level data for these map unit keys
+Pedon.Nodes.info<- SDA_query(Pedon.Nodes.query);
+head(Pedon.Nodes.info) ;
+str(Pedon.Nodes.info)  ;
+
+# filter components that are the major components of each unit map with the Flag majcompflag=='Yes'
+
+Pedon.Nodes.info.MajorC<-Pedon.Nodes.info[which(Pedon.Nodes.info$majcompflag == 'Yes'),]  ;
+head(Pedon.Nodes.info.MajorC) ; 
+str(Pedon.Nodes.info.MajorC)  ;
+
+
+
+# check if there are mukeys with more than one dominant component
+
+Pedon.Nodes.info.MajorC$mukey.factor<-as.factor(Pedon.Nodes.info.MajorC$mukey) ;
+
+Pedon.Nodes.info.MajorC$cokey.factor<-as.factor(Pedon.Nodes.info.MajorC$cokey) ;
+
+Pedon.Nodes.info.MajorC$mukey_comppct_r<-paste(Pedon.Nodes.info.MajorC$mukey.factor,Pedon.Nodes.info.MajorC$comppct_r, sep = "_") ;
+
+# Select major component mukeys that have also the highest component percent comppct_r
+
+head(Pedon.Nodes.info.MajorC)  ;
+
+Dominant.Nodes.Mukeys<- aggregate(comppct_r ~ mukey.factor, data=Pedon.Nodes.info.MajorC, FUN="max" , drop=T, simplify=T) ;
+
+head(Dominant.Nodes.Mukeys)  ;
+
+str(Dominant.Nodes.Mukeys) ;
+
+Dominant.Nodes.Mukeys$mukey_comppct_r<-paste(Dominant.Nodes.Mukeys$mukey.factor,Dominant.Nodes.Mukeys$comppct_r, sep ="_");
+
+
+Mukey.Nodes.Pedon<-Pedon.Nodes.info.MajorC[Pedon.Nodes.info.MajorC$mukey_comppct_r %in% Dominant.Nodes.Mukeys$mukey_comppct_r,]  ;
+
+str(Pedon.Nodes.info.MajorC$mukey_comppct_r)
+
+str(Dominant.Nodes.Mukeys$mukey_comppct_r)
+str(Mukey.Nodes.Pedon) ;
+
+
+# Creating Mukey ID for each dominant component
+
+
+Mukey.Nodes.Pedon$mukey_ID<-as.character(Mukey.Nodes.Pedon$mukey) ;
+
+
+#  Transform the Pedon.info query in to the right format to be converted into a SoilProfileCollection object
+#   https://ncss-tech.github.io/AQP/aqp/aqp-intro.html
+
+
+#Pedon.info$id<-Pedon.info$mukey ;
+# Pedon.info$top<-Pedon.info$hzdept_r ;
+# Pedon.info$bottom<-Pedon.info$hzdept_r ;
+#Pedon.info$name<-Pedon.info$hzname ;
+
+depths(Mukey.Nodes.Pedon)<-mukey_ID ~ hzdept_r + hzdepb_r  ;
+str(Mukey.Nodes.Pedon) ;
+
+
+
+
+
+
+plot(Mukey.Nodes.Pedon, name='hzname',color='dbthirdbar_r')  ;
+
+
+# get the total soil depth for each horizon
+
+
+Mukey.Nodes.Pedon$soil.depth<-profileApply(Mukey.Nodes.Pedon, FUN=max) ; 
+
+
+Mukey.Nodes.Pedon$hzthickns_r<-Mukey.Nodes.Pedon$hzdepb_r-Mukey.Nodes.Pedon$hzdept_r  ;
+
+str(Mukey.Nodes.Pedon) ;
+
+# add total soil depth to each horizon
+
+Mukey.Nodes.Pedon@horizons<-merge(Mukey.Nodes.Pedon@horizons, Mukey.Nodes.Pedon@site, by.x='mukey', by.y='mukey_ID') ;
+
+
+str(Mukey.Nodes.Pedon) ;
+
+
+####### Merge the information of of each mukey soil depth from Gssurgo with each node with the corresponding Mukey
+
+
+head(Mukey.Nodes.Pedon@horizons)
+
+str(Mukey.Nodes.Pedon@horizons)
+
+head(HansYoust.Nodes.Mukeys)
+
+str(HansYoust.Nodes.Mukeys)
+
+HansYoust.Nodes<-merge(HansYoust.Nodes.Mukeys, Mukey.Nodes.Pedon@horizons, by.x='Mukey.factor', by.y='mukey.factor', all=T) ;
+
+
+# ####################### done for now #################################################################################
+
+
+
+
 
