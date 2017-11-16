@@ -226,7 +226,6 @@ str(Pedon.info.MajorC)  ;
 
 Pedon.info.MajorC$mukey.factor<-as.factor(Pedon.info.MajorC$mukey) ;
 
-Pedon.info.MajorC$cokey.factor<-as.factor(Pedon.info.MajorC$cokey) ;
 
 Pedon.info.MajorC$mukey_comppct_r<-paste(Pedon.info.MajorC$mukey.factor,Pedon.info.MajorC$comppct_r, sep = "_") ;
 
@@ -563,9 +562,10 @@ DINF_etc<-data.frame(c('DINF' , 'KMACV_RO', 'KMACH_RO'), c( 0.10, 100.0 , 1000.0
 
 write.table(DINF_etc,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , col.names=F ,quote=F, sep = "\t", append= T) ;
 
-DINF        0.10
-KMACV_RO    100.0
-KMACH_RO    1000.0
+
+NUMGEOL<-data.frame(c('NUMGEOL'), dim(HansYoust_Geology)[1]) ;
+
+write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
 
 
 write.table(DINF_etc, file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", col.names=F, append= T ) ;
@@ -605,7 +605,7 @@ HansYoust.Nodes.Mukeys@data$Mukey.factor<-as.factor(HansYoust.Nodes.Mukeys$Mukey
 
 head(HansYoust.Nodes.Mukeys@data) 
 
-####  Convert the Mukeys into a factor and extract the levels of the factor to get theM Mukeys from which we need soil 
+####  Convert the Mukeys into a factor and extract the levels of the factor to get the Mukeys from which we need soil 
 ####  bedrock information
 
 NODE.MUKEYS<-levels(HansYoust.Nodes.Mukeys@data$Mukey.factor)  ;
@@ -638,13 +638,9 @@ Pedon.Nodes.info.MajorC<-Pedon.Nodes.info[which(Pedon.Nodes.info$majcompflag == 
 head(Pedon.Nodes.info.MajorC) ; 
 str(Pedon.Nodes.info.MajorC)  ;
 
-
-
 # check if there are mukeys with more than one dominant component
 
 Pedon.Nodes.info.MajorC$mukey.factor<-as.factor(Pedon.Nodes.info.MajorC$mukey) ;
-
-Pedon.Nodes.info.MajorC$cokey.factor<-as.factor(Pedon.Nodes.info.MajorC$cokey) ;
 
 Pedon.Nodes.info.MajorC$mukey_comppct_r<-paste(Pedon.Nodes.info.MajorC$mukey.factor,Pedon.Nodes.info.MajorC$comppct_r, sep = "_") ;
 
@@ -724,9 +720,22 @@ head(HansYoust.Nodes.Mukeys)
 
 str(HansYoust.Nodes.Mukeys)
 
-HansYoust.Nodes<-merge(HansYoust.Nodes.Mukeys, Mukey.Nodes.Pedon@horizons, by.x='Mukey.factor', by.y='mukey.factor', all=T) ;
+HansYoust.Nodes<-merge(HansYoust.Nodes.Mukeys@data , Mukey.Nodes.Pedon@site, by.x='Mukey.factor', by.y='mukey_ID') ;
+
+HansYoust.Nodes$ZMIN.GSSURGO<-HansYoust.Nodes$ZMAX - (HansYoust.Nodes$soil.depth/100)
 
 
+
+################################################################################################################################
+##
+## some of the dominant components Mukeys do no have data vailable. The strategy to fill these gaps is to get the average of the soil dpeth  of the neighboring nodes.
+##
+#########################################################################################################################
+
+HansYoust.Nodes_NA<-data.frame(which(is.na(HansYoust.Nodes), arr.ind=T)) ;
+
+
+######
 # ####################### done for now #################################################################################
 
 
