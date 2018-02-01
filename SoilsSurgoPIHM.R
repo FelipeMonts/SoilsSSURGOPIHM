@@ -416,7 +416,7 @@ Project_Soil$KINF<-Project_Soil$KSATV<-Project_Soil$KSATH<-Project_Soil$MAXSMC<-
 # HansYoust_Soil_NA<-data.frame(which(is.na(HansYoust_Soil), arr.ind=T)) ;
 
 
-Project_Soil_NA<-data.frame(which(is.na(HansYoust_Soil), arr.ind=T)) ;
+Project_Soil_NA<-data.frame(which(is.na(Project_Soil), arr.ind=T)) ;
 
 
 # Mukey_Gaps<-HansYoust_Soil[unique(HansYoust_Soil_NA$row),'MUKEY'] ;
