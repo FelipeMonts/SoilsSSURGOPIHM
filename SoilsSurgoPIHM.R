@@ -26,9 +26,9 @@ setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs')
 
 ####### Store the name of the project to read and write files more easily #############
 
-#Project<-"MergeVectorLayer000_q30_a200000"   ;
+Project<-"MergeVectorLayer000_q25_a100000" ;
 
-Project<-"DataModel" ;
+#Project<-"DataModel" ;
 
 
 
@@ -124,17 +124,20 @@ library(stats)
 
 # HansYoust.mesh.info<-ogrInfo("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp");
 
-Project.mesh.info<-ogrInfo("C:/Aun Trabajo en Proceso/HansYostDeepCreek/Aug2920171550/3DomainDecomposition/DomainDecomposition2.shp")  ;  
+Project.mesh.info<-ogrInfo("C:/Aun Trabajo en Proceso/HansYostDeepCreek/Mar0820181045/3DomainDecomposition/MergeVectorLayer000_q25_a100000.shp")  ; 
 
 #### read the shape file that has been created in QGIS using the zonal statistics
 
 # HansYoust.GSSURGO<-readOGR("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp")  ;
 
-Project.GSSURGO<-readOGR("C:/Aun Trabajo en Proceso/HansYostDeepCreek/Aug2920171550/3DomainDecomposition/DomainDecomposition2.shp")  ;  
+Project.GSSURGO<-readOGR("C:/Aun Trabajo en Proceso/HansYostDeepCreek/Mar0820181045/3DomainDecomposition/MergeVectorLayer000_q25_a100000.shp")  ;  
+
+
+
 
 # str(HansYoust.GSSURGO) ;
 
-str(Project.GSSURGO, max.level = 3) ;
+str(Project.GSSURGO, max.level = 2) ;
 
 
 #plot(HansYoust.GSSURGO);
@@ -151,7 +154,7 @@ str(Project.GSSURGO@data)  ;
 
 # HansYoust.GSSURGO@data$MUKEYS.mode<-as.factor(HansYoust.GSSURGO@data$SSURGO_mod) ;
 
-Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$Mukey_majo) ;
+Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$HY_SOIL_ma) ;
 
 
 #MUKEYS<-levels(HansYoust.GSSURGO@data$MUKEYS.mode)  ;
@@ -327,7 +330,7 @@ str(Mukey.Pedon) ;
 
 
 
-sliced<-aqp::slice(Mukey.Pedon, fm = 0:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r  + soil.depth + mukey.factor ) ;
+sliced<-aqp::slice(Mukey.Pedon, fm = 1:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r  + soil.depth + mukey.factor ) ;
 
 plot(sliced, name='hzname', color='om_r') ;
 
@@ -390,7 +393,7 @@ Project_Soil<-merge(sliced@site[, c("mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")
 
 # HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")], digits=4)
 
-Project_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")], digits=4) ;
+Project_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(Project_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")], digits=4) ;
 
 # names(HansYoust_Soil)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
 
@@ -406,83 +409,6 @@ head(Project_Soil) ;
 # HansYoust_Soil$KINF<-HansYoust_Soil$KSATV<-HansYoust_Soil$KSATH<-HansYoust_Soil$MAXSMC<-HansYoust_Soil$MINSMC<-HansYoust_Soil$ALPHA<-HansYoust_Soil$BETA<-HansYoust_Soil$MACHF<-HansYoust_Soil$MACVF<-HansYoust_Soil$DMAC<-HansYoust_Soil$QTZ<- -999 ;
 
 Project_Soil$KINF<-Project_Soil$KSATV<-Project_Soil$KSATH<-Project_Soil$MAXSMC<-Project_Soil$MINSMC<-Project_Soil$ALPHA<-Project_Soil$BETA<-Project_Soil$MACHF<-Project_Soil$MACVF<-Project_Soil$DMAC<-Project_Soil$QTZ<- -999 ;
-
-##########################################################################################################################
-##
-## some of the dominant components Mukeys do no have data available. The strategy to fill these gaps is to gte the average of the Mukeys parameters of the neighboring Triangles.
-##
-##########################################################################################################################
-
-# HansYoust_Soil_NA<-data.frame(which(is.na(HansYoust_Soil), arr.ind=T)) ;
-
-
-Project_Soil_NA<-data.frame(which(is.na(Project_Soil), arr.ind=T)) ;
-
-
-# Mukey_Gaps<-HansYoust_Soil[unique(HansYoust_Soil_NA$row),'MUKEY'] ;
-
-
-Mukey_Gaps<-Project_Soil[unique(Project_Soil_NA$row),'MUKEY'] ;
-
-##### Find the soil index  and the triangles that have Mukeys corresponding to the Mukey_Gaps
-
-Mukey_Gaps_indx<-MUKEYS.map.1[MUKEYS.map.1$MUKEYS.mode ==Mukey_Gaps, ]    ;
-
-
-###### Find the neighboring triangles of the Triangles with the Mukey_Gaps 
-
-
-Mukey_Gaps_indx_neighbors<-mesh.Elements[mesh.Elements$Index %in% Mukey_Gaps_indx$Ele_ID,]   ;
-
-
-###### retrieve the representative mukeys of the neighboring triangles
-
-Neighbor_Mukeys_1<-unlist(Mukey_Gaps_indx_neighbors[1,c('Nabr.0' , 'Nabr.1' , 'Nabr.2')],use.names = F, recursive=T)  ;
-
-Neighbor_Mukeys<-MUKEYS.map.1[MUKEYS.map.1$Ele_ID %in% Neighbor_Mukeys_1, ]  ;
-
-# Neighbor_Mukeys_para<-HansYoust_Soil[HansYoust_Soil$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
-
-Neighbor_Mukeys_para<-Project_Soil[Project_Soil$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
-
-######## Average the representative Mukeys properties  of the neighboring triangles
-
-Neighbor_Mukeys_avg<-apply(Neighbor_Mukeys_para, MARGIN = c(2), FUN = 'mean') ;
-
-
-####### Replace the values in the table 
-
-# HansYoust_Soil[HansYoust_Soil$MUKEY == Mukey_Gaps,c('SILT' , 'CLAY' , 'OM' ,  'BD') ] <-Neighbor_Mukeys_avg ;
-
-Project_Soil[Project_Soil$MUKEY == Mukey_Gaps,c('SILT' , 'CLAY' , 'OM' ,  'BD') ] <-Neighbor_Mukeys_avg ;
-
-######## Need to replace the other triangles that have the same mukey
-
-Neighbor_Mukeys_2<-unlist(Mukey_Gaps_indx_neighbors[2,c('Nabr.0' , 'Nabr.1' , 'Nabr.2')],use.names = F, recursive=T)  ;
-
-Neighbor_Mukeys<-MUKEYS.map.1[MUKEYS.map.1$Ele_ID %in% Neighbor_Mukeys_2, ]    ;
-
-# Neighbor_Mukeys_para<-HansYoust_Soil[HansYoust_Soil$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
-
-Neighbor_Mukeys_para<-Project_Soil[Project_Soil$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
-
-######## Average the representative Mukeys properties  of the neighboring triangles
-
-Neighbor_Mukeys_avg<-apply(Neighbor_Mukeys_para, MARGIN = c(2), FUN = 'mean') ;
-
-# HansYoust_Soil[dim(HansYoust_Soil)[1]+1,'INDEX']<-dim(HansYoust_Soil)[1]+1  ;
-
-Project_Soil[dim(Project_Soil)[1]+1,'INDEX']<-dim(Project_Soil)[1]+1 
-
-# HansYoust_Soil[dim(HansYoust_Soil)[1],c('SILT' , 'CLAY' , 'OM' ,  'BD')]<-Neighbor_Mukeys_avg ;
-
-Project_Soil[dim(Project_Soil)[1],c('SILT' , 'CLAY' , 'OM' ,  'BD')]<-Neighbor_Mukeys_avg ;
-
-
-# HansYoust_Soil[dim(HansYoust_Soil)[1],!names(HansYoust_Soil) %in% c( 'MUKEY' ,'SILT' , 'CLAY' , 'OM' ,  'BD', 'INDEX')] <- -999   ;
-
-Project_Soil[dim(Project_Soil)[1],!names(Project_Soil) %in% c( 'MUKEY' ,'SILT' , 'CLAY' , 'OM' ,  'BD', 'INDEX')] <- -999   ;
-
 
 
 
@@ -560,106 +486,51 @@ Project_Geology$KINF<-Project_Geology$KSATV<-Project_Geology$KSATH<-Project_Geol
 
 
 
-
-################################################################################################################################
-##
-## some of the dominant components Mukeys do no have data vailable. The strategy to fill these gaps is to gte the average of the Mukeys parameters of the neighboring Triangles.
-##
-##########################################################################################################################
-
-
-
-###### retrieve the representative mukeys of the neighboring triangles
-
-# Neighbor_Mukeys_para<-HansYoust_Geology[HansYoust_Geology$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
-
-Neighbor_Mukeys_para<-Project_Geology[Project_Geology$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ] ;
-
-######## Average the representative Mukeys properties  of the neighboring triangles
-
-Neighbor_Mukeys_avg<-apply(Neighbor_Mukeys_para, MARGIN = c(2), FUN = 'mean') ;
-
-
-####### Replace the values in the table 
-
-# HansYoust_Geology[HansYoust_Geology$MUKEY == Mukey_Gaps,c('SILT' , 'CLAY' , 'OM' ,  'BD') ] <-Neighbor_Mukeys_avg ;
-
-Project_Geology[Project_Geology$MUKEY == Mukey_Gaps,c('SILT' , 'CLAY' , 'OM' ,  'BD') ] <-Neighbor_Mukeys_avg ;
-
-######## Need to replace the other triangles that have the same mukey
-
-# Neighbor_Mukeys_para<-HansYoust_Geology[HansYoust_Geology$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
-
-Neighbor_Mukeys_para<-Project_Geology[Project_Geology$MUKEY %in% Neighbor_Mukeys$MUKEYS.mode, c('SILT' , 'CLAY' , 'OM' ,  'BD') ]  ;
-
-
-######## Average the representative Mukeys properties  of the neighboring triangles
-
-Neighbor_Mukeys_avg<-apply(Neighbor_Mukeys_para, MARGIN = c(2), FUN = 'mean') ;
-
-
-
-# HansYoust_Geology[dim(HansYoust_Geology)[1]+1,'INDEX']<-dim(HansYoust_Geology)[1]+1  ;
-
-Project_Geology[dim(Project_Geology)[1]+1,'INDEX']<-dim(Project_Geology)[1]+1  
-
-# HansYoust_Geology[dim(HansYoust_Geology)[1],c('SILT' , 'CLAY' , 'OM' ,  'BD')]<-Neighbor_Mukeys_avg ;
-
-Project_Geology[dim(Project_Geology)[1],c('SILT' , 'CLAY' , 'OM' ,  'BD')]<-Neighbor_Mukeys_avg ;
-
-
-# HansYoust_Geology[dim(HansYoust_Geology)[1],!names(HansYoust_Geology) %in% c( 'MUKEY' ,'SILT' , 'CLAY' , 'OM' ,  'BD', 'INDEX')] <- -999   ;
-
-Project_Geology[dim(Project_Geology)[1],!names(Project_Geology) %in% c( 'MUKEY' ,'SILT' , 'CLAY' , 'OM' ,  'BD', 'INDEX')] <- -999   ;
-
-
-
-
-#############################################################################################################################
-#
-#
-####################### Write the soil and geology data in the format approptiate for PIHM to take #############################
-
-# NUMSOIL<-data.frame(c('NUMSOIL'), dim(HansYoust_Soil)[1]) ;
-
-NUMSOIL<-data.frame(c('NUMSOIL'), dim(Project_Soil)[1]) ;
-
-
-# NUMGEOL<-data.frame(c('NUMGEOL'), dim(HansYoust_Geology)[1]) ;
-
-NUMGEOL<-data.frame(c('NUMGEOL'), dim(Project_Geology)[1]) ;
-
-
-write.table(NUMSOIL,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", col.names=F) ;
-
-# write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
-
-write.table(Project_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
-
-####################  Add DINF , KMACV_RO  and KMACH_RO  at the end of the soil file ################
-# DINF (type: double, unit: m) A virtual top soil layer thickness across which infiltration is calculated.
-# KMACV RO (type: double, unit: dimensionless) Ratio between vertical macropore hydraulic conduc-
-#   tivity and vertical saturated infiltration hydraulic conductivity.
-# KMACH RO (type: double, unit: dimensionless) Ratio between horizontal macropore hydraulic con-
-#   ductivity and horizontal saturated hydraulic conductivity.
-
-DINF_etc<-data.frame(c('DINF' , 'KMACV_RO', 'KMACH_RO'), c( 0.10, 100.0 , 1000.0 )) ;
-
-write.table(DINF_etc,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , col.names=F ,quote=F, sep = "\t", append= T) ;
-
-
-# NUMGEOL<-data.frame(c('NUMGEOL'), dim(HansYoust_Geology)[1]) ;
-
-NUMGEOL<-data.frame(c('NUMGEOL'), dim(Project_Geology)[1]) ;
-
-
-# write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
-
-write.table(Project_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
-
-
-write.table(DINF_etc, file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", col.names=F, append= T ) ;
-
+# #############################################################################################################################
+# #
+# #
+# ####################### Write the soil and geology data in the format approptiate for PIHM to take #############################
+# 
+# # NUMSOIL<-data.frame(c('NUMSOIL'), dim(HansYoust_Soil)[1]) ;
+# 
+# NUMSOIL<-data.frame(c('NUMSOIL'), dim(Project_Soil)[1]) ;
+# 
+# 
+# # NUMGEOL<-data.frame(c('NUMGEOL'), dim(HansYoust_Geology)[1]) ;
+# 
+# NUMGEOL<-data.frame(c('NUMGEOL'), dim(Project_Geology)[1]) ;
+# 
+# 
+# write.table(NUMSOIL,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", col.names=F) ;
+# 
+# # write.table(HansYoust_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
+# 
+# write.table(Project_Soil[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Soil.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
+# 
+# ####################  Add DINF , KMACV_RO  and KMACH_RO  at the end of the soil file ################
+# # DINF (type: double, unit: m) A virtual top soil layer thickness across which infiltration is calculated.
+# # KMACV RO (type: double, unit: dimensionless) Ratio between vertical macropore hydraulic conduc-
+# #   tivity and vertical saturated infiltration hydraulic conductivity.
+# # KMACH RO (type: double, unit: dimensionless) Ratio between horizontal macropore hydraulic con-
+# #   ductivity and horizontal saturated hydraulic conductivity.
+# 
+# DINF_etc<-data.frame(c('DINF' , 'KMACV_RO', 'KMACH_RO'), c( 0.10, 100.0 , 1000.0 )) ;
+# 
+# write.table(DINF_etc,file=paste0(inputfile.name, '_Soil.txt'), row.names=F , col.names=F ,quote=F, sep = "\t", append= T) ;
+# 
+# 
+# # NUMGEOL<-data.frame(c('NUMGEOL'), dim(HansYoust_Geology)[1]) ;
+# 
+# NUMGEOL<-data.frame(c('NUMGEOL'), dim(Project_Geology)[1]) ;
+# 
+# 
+# # write.table(HansYoust_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
+# 
+# write.table(Project_Geology[, c('INDEX','SILT',  'CLAY',	'OM','BD', 'KINF', 'KSATV' , 'KSATH' , 'MAXSMC' , 'MINSMC' , 'ALPHA' , 'BETA' , 'MACHF' , 'MACVF' , 'DMAC', 'QTZ')],file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", append= T) ;
+# 
+# 
+# write.table(DINF_etc, file=paste0(inputfile.name, '_Geology.txt'), row.names=F , quote=F, sep = "\t", col.names=F, append= T ) ;
+# 
 
 
 
@@ -667,172 +538,16 @@ write.table(DINF_etc, file=paste0(inputfile.name, '_Geology.txt'), row.names=F ,
 # 
 # ####################### done for now #################################################################################
 
+######## Create the directory where the objects created in the file PIHMInputsR.RData are to be saved
 
+#dir.create(paste0('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs\\',Project));
 
+save.image(file=paste0('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs\\',Project,'\\SoilsSurgoPIHM.RData'));
 
 
 
 
 
-
-# ###########################################################################################################################
-# 
-# ###     Prepare depth to bed rock data to be incorporated into the mesh file when a uniform soil profile depth
-# ###     is not what is desired 
-# 
-# ###########################################################################################################################
-
-##### Read the nodes and the corresponding Mukey from the TX file formed from Qgis
-
-
-HansYoust.Nodes.Mukeys.info<-ogrInfo(paste0(RevisedOutputs.dir, 'NodesMukeys.shp'));
-
-
-HansYoust.Nodes.Mukeys<-readOGR(paste0(RevisedOutputs.dir, 'NodesMukeys.shp'))  ;
-
-str(HansYoust.Nodes.Mukeys)  ;
-
-
-
-#### Extract the Mukeys corresponding to each Node
-
-
-HansYoust.Nodes.Mukeys@data$Mukey.factor<-as.factor(HansYoust.Nodes.Mukeys$Mukeys) ;
-
-head(HansYoust.Nodes.Mukeys@data) 
-
-####  Convert the Mukeys into a factor and extract the levels of the factor to get the Mukeys from which we need soil 
-####  bedrock information
-
-NODE.MUKEYS<-levels(HansYoust.Nodes.Mukeys@data$Mukey.factor)  ;
-
-str(NODE.MUKEYS)
-
-
-
-################################ Query the Soil Data access database with SQL through R #################
-
-
-# extract the map unit keys from the RAT, and format for use in an SQL IN-statement
-#in.statement2 <- format_SQL_in_statement(MUKEYS$ID); 
-
-in.statement3 <- format_SQL_in_statement(NODE.MUKEYS); 
-
-
-# format query in SQL- raw data are returned
-
-Pedon.Nodes.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r,hzthk_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement3," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
-
-# now get component and horizon-level data for these map unit keys
-Pedon.Nodes.info<- SDA_query(Pedon.Nodes.query);
-head(Pedon.Nodes.info) ;
-str(Pedon.Nodes.info)  ;
-
-# filter components that are the major components of each unit map with the Flag majcompflag=='Yes'
-
-Pedon.Nodes.info.MajorC<-Pedon.Nodes.info[which(Pedon.Nodes.info$majcompflag == 'Yes'),]  ;
-head(Pedon.Nodes.info.MajorC) ; 
-str(Pedon.Nodes.info.MajorC)  ;
-
-# check if there are mukeys with more than one dominant component
-
-Pedon.Nodes.info.MajorC$mukey.factor<-as.factor(Pedon.Nodes.info.MajorC$mukey) ;
-
-Pedon.Nodes.info.MajorC$mukey_comppct_r<-paste(Pedon.Nodes.info.MajorC$mukey.factor,Pedon.Nodes.info.MajorC$comppct_r, sep = "_") ;
-
-# Select major component mukeys that have also the highest component percent comppct_r
-
-head(Pedon.Nodes.info.MajorC)  ;
-
-Dominant.Nodes.Mukeys<- aggregate(comppct_r ~ mukey.factor, data=Pedon.Nodes.info.MajorC, FUN="max" , drop=T, simplify=T) ;
-
-head(Dominant.Nodes.Mukeys)  ;
-
-str(Dominant.Nodes.Mukeys) ;
-
-Dominant.Nodes.Mukeys$mukey_comppct_r<-paste(Dominant.Nodes.Mukeys$mukey.factor,Dominant.Nodes.Mukeys$comppct_r, sep ="_");
-
-
-Mukey.Nodes.Pedon<-Pedon.Nodes.info.MajorC[Pedon.Nodes.info.MajorC$mukey_comppct_r %in% Dominant.Nodes.Mukeys$mukey_comppct_r,]  ;
-
-str(Pedon.Nodes.info.MajorC$mukey_comppct_r)
-
-str(Dominant.Nodes.Mukeys$mukey_comppct_r)
-str(Mukey.Nodes.Pedon) ;
-
-
-# Creating Mukey ID for each dominant component
-
-
-Mukey.Nodes.Pedon$mukey_ID<-as.character(Mukey.Nodes.Pedon$mukey) ;
-
-
-#  Transform the Pedon.info query in to the right format to be converted into a SoilProfileCollection object
-#   https://ncss-tech.github.io/AQP/aqp/aqp-intro.html
-
-
-#Pedon.info$id<-Pedon.info$mukey ;
-# Pedon.info$top<-Pedon.info$hzdept_r ;
-# Pedon.info$bottom<-Pedon.info$hzdept_r ;
-#Pedon.info$name<-Pedon.info$hzname ;
-
-depths(Mukey.Nodes.Pedon)<-mukey_ID ~ hzdept_r + hzdepb_r  ;
-str(Mukey.Nodes.Pedon) ;
-
-
-
-
-
-
-plot(Mukey.Nodes.Pedon, name='hzname',color='dbthirdbar_r')  ;
-
-
-# get the total soil depth for each horizon
-
-
-Mukey.Nodes.Pedon$soil.depth<-profileApply(Mukey.Nodes.Pedon, FUN=max) ; 
-
-
-Mukey.Nodes.Pedon$hzthickns_r<-Mukey.Nodes.Pedon$hzdepb_r-Mukey.Nodes.Pedon$hzdept_r  ;
-
-str(Mukey.Nodes.Pedon) ;
-
-# add total soil depth to each horizon
-
-Mukey.Nodes.Pedon@horizons<-merge(Mukey.Nodes.Pedon@horizons, Mukey.Nodes.Pedon@site, by.x='mukey', by.y='mukey_ID') ;
-
-
-str(Mukey.Nodes.Pedon) ;
-
-
-####### Merge the information of of each mukey soil depth from Gssurgo with each node with the corresponding Mukey
-
-
-head(Mukey.Nodes.Pedon@horizons)
-
-str(Mukey.Nodes.Pedon@horizons)
-
-head(HansYoust.Nodes.Mukeys)
-
-str(HansYoust.Nodes.Mukeys)
-
-HansYoust.Nodes<-merge(HansYoust.Nodes.Mukeys@data , Mukey.Nodes.Pedon@site, by.x='Mukey.factor', by.y='mukey_ID') ;
-
-HansYoust.Nodes$ZMIN.GSSURGO<-HansYoust.Nodes$ZMAX - (HansYoust.Nodes$soil.depth/100)
-
-
-
-################################################################################################################################
-##
-## some of the dominant components Mukeys do no have data vailable. The strategy to fill these gaps is to get the average of the soil dpeth  of the neighboring nodes.
-##
-#########################################################################################################################
-
-HansYoust.Nodes_NA<-data.frame(which(is.na(HansYoust.Nodes), arr.ind=T)) ;
-
-
-######
-# ####################### done for now #################################################################################
 
 
 
