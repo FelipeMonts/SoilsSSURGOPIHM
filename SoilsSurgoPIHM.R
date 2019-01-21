@@ -16,7 +16,16 @@
 
 #  Set Working directory
 
-setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs')   
+# setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs')   
+
+
+######## Store the name of the directory whre the modified MM-PIHM inputs are to be stored
+
+
+RevisedOutputs.dir<-paste0(Project.Directory,'\\MM_PHIM_INPUTS') ;
+
+
+setwd(RevisedOutputs.dir)   ;
 
 #  Windows.Directory<-gsub("\\\\", "/", readClipboard())
 #  C:\Felipe\PIHM-CYCLES\PIHM\PIHM_Felipe\CNS\Manhantango\HydroTerreFullManhantango\HansYostDeepCreek\Aug2920171550
@@ -26,13 +35,13 @@ setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs')
 
 ####### Store the name of the project to read and write files more easily #############
 
-Project<-"MergeVectorLayer000_q25_a100000" ;
+Project<-"MergeVectorLayer000_q30" ;
 
 #Project<-"DataModel" ;
 
 
 
-load(paste0('./',Project,'/PIHMInputsR.RData'));
+load(paste0(RevisedOutputs.dir,'\\PIHMInputsR.RData'));
 
 
 
@@ -42,34 +51,44 @@ load(paste0('./',Project,'/PIHMInputsR.RData'));
 #dir.create(Project);
 
 
-RevisedOutputs.dir<-paste0('./',Project,'/') ;
+ 
 
 
 
 
-# Create the path to read the input files by pasting RevisedOutputs.dir and the Project name together with the file ".name" ie ".mesh"
+# Create the path to read the input files by pasting Windows.Directory and the Project name together with the file ".name" ie ".mesh"
 
-inputfile.name<-paste0(RevisedOutputs.dir,Project) ;
+inputfile.name<paste0(Windows.Directory,'\\4DataModelLoader') ;
+
 
 ########### Install packages  #####################
 
 
-# install.packages('raster', dep=TRUE)
+
+
+# install.packages('ggplot2', dep=TRUE)
+# install.packages('base64enc' , dep=TRUE) 
+# install.packages("raster", dep = TRUE)
 # install.packages('plyr', dep=TRUE)
 # install.packages('Hmisc', dep=TRUE)
 # install.packages('soilDB', dep=TRUE) # stable version from CRAN + dependencies
 # install.packages("soilDB", repos="http://R-Forge.R-project.org") # most recent copy from r-forge
 # install.packages("SSOAP", repos = "http://www.omegahat.org/R", type="source") # SSOAP and XMLSchema
+
+
+
+
 # install.packages("foreign")
 # install.packages("httr", dep=TRUE)
 # install.packages("rgdal", dep = TRUE)
-# install.packages("raster", dep = TRUE)
+
 # install.packages("rgeos", dep = TRUE)
 # install.packages("RColorBrewer")
-# install.packages("latticeExtra")A
+# install.packages("latticeExtra")
 # install.packages("reshape")
-# install.packages("dplyr")
-# install.packages("aqp")
+# install.packages("dplyr", dep=TRUE)
+# install.packages("aqp", dep=TRUE)
+
 
 ########### Call the library packages needed for the program to work #############
 
@@ -81,8 +100,7 @@ library(soilDB) ;
 library(raster) ;
 library(aqp) ;
 library(sp) ;
-library(rgdal) ;
-library(raster) ;
+library(rgdal) ; 
 library(rgeos) ; 
 library(lattice) ;
 library(MASS) ;
@@ -124,13 +142,13 @@ library(stats)
 
 # HansYoust.mesh.info<-ogrInfo("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp");
 
-Project.mesh.info<-ogrInfo("C:/Aun Trabajo en Proceso/HansYostDeepCreek/Mar0820181045/3DomainDecomposition/MergeVectorLayer000_q25_a100000.shp")  ; 
+Project.mesh.info<-ogrInfo(paste0(RevisedOutputs.dir, '/',Project,'_Ssurgo.shp'))  ; 
 
 #### read the shape file that has been created in QGIS using the zonal statistics
 
 # HansYoust.GSSURGO<-readOGR("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp")  ;
 
-Project.GSSURGO<-readOGR("C:/Aun Trabajo en Proceso/HansYostDeepCreek/Mar0820181045/3DomainDecomposition/MergeVectorLayer000_q25_a100000.shp")  ;  
+Project.GSSURGO<-readOGR(paste0(RevisedOutputs.dir, '/',Project,'_Ssurgo.shp'))  ;  
 
 
 
@@ -154,7 +172,7 @@ str(Project.GSSURGO@data)  ;
 
 # HansYoust.GSSURGO@data$MUKEYS.mode<-as.factor(HansYoust.GSSURGO@data$SSURGO_mod) ;
 
-Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$HY_SOIL_ma) ;
+Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$Ssurgo_maj) ;
 
 
 #MUKEYS<-levels(HansYoust.GSSURGO@data$MUKEYS.mode)  ;
@@ -182,11 +200,13 @@ str(MUKEYS.map.1)
 str(MUKEYS.map.2)
 
 
-paste0(inputfile.name, '.ATT')
+paste0(inputfile.name, '.att')
 
-write.table(MUKEYS.map.1,file=paste0(inputfile.name, '_MUKEYS_MAP.txt'), row.names=F , quote=F, sep = "\t") ;
 
-write.table(MUKEYS.map.2,file=paste0(inputfile.name, '_MUKEYS_INDX.txt'), row.names=F , quote=F, sep = "\t") ;
+
+write.table(MUKEYS.map.1,file=paste0(RevisedOutputs.dir, '/MUKEYS_MAP.txt'), row.names=F , quote=F, sep = "\t") ;
+
+write.table(MUKEYS.map.2,file=paste0(RevisedOutputs.dir, '/MUKEYS_INDX.txt'), row.names=F , quote=F, sep = "\t") ;
 
 ################################ Query the Soil Data access database with SQL through R #################
 
@@ -542,7 +562,7 @@ Project_Geology$KINF<-Project_Geology$KSATV<-Project_Geology$KSATH<-Project_Geol
 
 #dir.create(paste0('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs\\',Project));
 
-save.image(file=paste0('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs\\',Project,'\\SoilsSurgoPIHM.RData'));
+save.image(file=paste0(RevisedOutputs.dir,'\\SoilsSurgoPIHM.RData'));
 
 
 
