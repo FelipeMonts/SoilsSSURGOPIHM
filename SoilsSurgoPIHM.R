@@ -1,73 +1,53 @@
-#################### Program to create the soils File in PIHM from Data in SSurgo and other resources##################
-################# Felipe Montes ##########################
-################# 2015 11 13 ############################
-################# REvised 2017/09/29 ####################
+##############################################################################################################
+# 
+# 
+#       Program to create the soils File in PIHM from Data in SSurgo and other resources
+#       
+#    
+# 
+#       For MM_PHIM input format corresponding to  (Prerelease 0.6.0 Alpha git@github.com:PSUmodeling/MM-PIHM.git)
+# 
+# 
+#  Felipe Montes 2015 /11 /13
+#  Revised       2017 /09 /29
+# 
+# 
+# 
+############################################################################################################### 
+
+
 
 ###############################################################################################################
-#                          Loading Packages and setting up working directory                        
+#                             Tell the program where the package libraries are stored                        
 ###############################################################################################################
-
 
 
 #  Tell the program where the package libraries are  #####################
 
-
 .libPaths("C:/Felipe/SotwareANDCoding/R_Library/library")  ;
 
-#  Set Working directory
 
-# setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs')   
-
-
-######## Store the name of the directory whre the modified MM-PIHM inputs are to be stored
+###############################################################################################################
+#                             Setting up working directory                        
+###############################################################################################################
 
 
-RevisedOutputs.dir<-paste0(Project.Directory,'\\MM_PHIM_INPUTS') ;
+#      set the working directory
 
 
-setwd(RevisedOutputs.dir)   ;
-
-#  Windows.Directory<-gsub("\\\\", "/", readClipboard())
-#  C:\Felipe\PIHM-CYCLES\PIHM\PIHM_Felipe\CNS\Manhantango\HydroTerreFullManhantango\HansYostDeepCreek\Aug2920171550
-
-#  C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/WE-38/WE38_Files_PIHM_Cycles20170208/SWATPIHMRcode 
-
-
-####### Store the name of the project to read and write files more easily #############
-
-Project<-"MergeVectorLayer000_q30" ;
-
-#Project<-"DataModel" ;
+setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM SIMULATIONS\\YAHARA\\MM_PHIM_inputs') ;       #  setwd(RevisedOutputs.dir)   ;
 
 
 
-load(paste0(RevisedOutputs.dir,'\\PIHMInputsR.RData'));
+###############################################################################################################
+#                            Install the packages that are needed                       
+###############################################################################################################
 
 
-
-######## Store the name of the directory whre the modified MM-PIHM inputs are to be stored
-
-
-#dir.create(Project);
-
-
- 
-
-
-
-
-# Create the path to read the input files by pasting Windows.Directory and the Project name together with the file ".name" ie ".mesh"
-
-inputfile.name<paste0(Windows.Directory,'\\4DataModelLoader') ;
-
-
-########### Install packages  #####################
-
-
-
+# Install the packages that are needed #
 
 # install.packages('ggplot2', dep=TRUE)
-# install.packages('base64enc' , dep=TRUE) 
+# install.packages('base64enc' , dep=TRUE)
 # install.packages("raster", dep = TRUE)
 # install.packages('plyr', dep=TRUE)
 # install.packages('Hmisc', dep=TRUE)
@@ -90,7 +70,13 @@ inputfile.name<paste0(Windows.Directory,'\\4DataModelLoader') ;
 # install.packages("aqp", dep=TRUE)
 
 
-########### Call the library packages needed for the program to work #############
+
+
+
+###############################################################################################################
+#                           load the libraries that are neded   
+###############################################################################################################
+
 
 # load libraries
 library(Hmisc) ;
@@ -111,7 +97,6 @@ library(tidyr)  ;
 library(devtools) ;
 library(stats)
 
-   
 
 
 # ########################## import the raster file with the GSSURGO Data for the watershed in PIHM ####################
@@ -142,13 +127,13 @@ library(stats)
 
 # HansYoust.mesh.info<-ogrInfo("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp");
 
-Project.mesh.info<-ogrInfo(paste0(RevisedOutputs.dir, '/',Project,'_Ssurgo.shp'))  ; 
+Project.mesh.info<-ogrInfo("MergeVectorLayer200_q25_250_3GSSURGO.shp")  ; 
 
 #### read the shape file that has been created in QGIS using the zonal statistics
 
 # HansYoust.GSSURGO<-readOGR("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp")  ;
 
-Project.GSSURGO<-readOGR(paste0(RevisedOutputs.dir, '/',Project,'_Ssurgo.shp'))  ;  
+Project.GSSURGO<-readOGR("../Oct0920191330/DomainDecomposition/MergeFeatures_q30_a1000000_o.shp" )  ;  
 
 
 
@@ -172,7 +157,7 @@ str(Project.GSSURGO@data)  ;
 
 # HansYoust.GSSURGO@data$MUKEYS.mode<-as.factor(HansYoust.GSSURGO@data$SSURGO_mod) ;
 
-Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$Ssurgo_maj) ;
+Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$GSURGO_Mod) ;
 
 
 #MUKEYS<-levels(HansYoust.GSSURGO@data$MUKEYS.mode)  ;
@@ -200,13 +185,13 @@ str(MUKEYS.map.1)
 str(MUKEYS.map.2)
 
 
-paste0(inputfile.name, '.att')
+#paste0(inputfile.name, '.att')
 
 
 
-write.table(MUKEYS.map.1,file=paste0(RevisedOutputs.dir, '/MUKEYS_MAP.txt'), row.names=F , quote=F, sep = "\t") ;
+write.table(MUKEYS.map.1,file='MUKEYS_MAP.txt', row.names=F , quote=F, sep = "\t") ;
 
-write.table(MUKEYS.map.2,file=paste0(RevisedOutputs.dir, '/MUKEYS_INDX.txt'), row.names=F , quote=F, sep = "\t") ;
+write.table(MUKEYS.map.2,file='MUKEYS_INDX.txt', row.names=F , quote=F, sep = "\t") ;
 
 ################################ Query the Soil Data access database with SQL through R #################
 
@@ -248,6 +233,7 @@ write.table(MUKEYS.map.2,file=paste0(RevisedOutputs.dir, '/MUKEYS_INDX.txt'), ro
 in.statement2 <- format_SQL_in_statement(MUKEYS); 
 
 
+
 # format query in SQL- raw data are returned
 
 Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r,hzthk_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement2," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
@@ -256,6 +242,38 @@ Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct
 Pedon.info<- SDA_query(Pedon.query);
 head(Pedon.info) ;
 str(Pedon.info)  ;
+
+
+########################################## IMPORTANT ###########################################################
+
+### Map Unit No. 539762 is a water body and is not available to query from the SDA_query function
+
+### Map Unit No. 539759 are urban land Urban land-Udults complex
+
+### Map Unit No. 542030, 542033, 542034 Opequon  https://casoilresource.lawr.ucdavis.edu/sde/?series=opequon
+                 # some layers do not have data
+ 
+### Map Unit No. 542034 Pits  https://casoilresource.lawr.ucdavis.edu/soil_web/ssurgo.php?action=explain_mapunit&mukey=542034
+
+### Map Unit No.  927072 Quarries
+
+### Map Unit No. 542043  https://casoilresource.lawr.ucdavis.edu/sde/?series=vanderlip
+
+###############################################################################################################
+
+Pedon.info[Pedon.info$mukey==539762,]
+
+Pedon.info[Pedon.info$mukey==539759,]
+
+Pedon.info[Pedon.info$mukey==542030,]
+
+Pedon.info[Pedon.info$mukey==542033,]
+
+Pedon.info[Pedon.info$mukey==542034,]
+
+Pedon.info[Pedon.info$mukey==542043,]
+
+
 
 # filter components that are the major components of each unit map with the Flag majcompflag=='Yes'
 
@@ -366,7 +384,7 @@ str(sliced) ;
 
 
 
-######   multiply the thincknes (1cm) and the bulk density dbthirdbar_r to the component percentage to obtain the weighted component
+######   multiply the thincknes (1 cm) and the bulk density dbthirdbar_r to the component percentage to obtain the weighted component
 
 ##### sum the weighted component 1 cm layers  to obtained the weighted average component
 
@@ -440,9 +458,16 @@ Project_Soil$KINF<-Project_Soil$KSATV<-Project_Soil$KSATH<-Project_Soil$MAXSMC<-
 # ###########################################################################################################################
 
 
+Neeed to compare the dominant selected components of the Geology file with the ones selected for the soil files. There seesm to be some differences.
+
+
 Mukey.deepest<-Mukey.Pedon@horizons[Mukey.Pedon@horizons$hzdepb_r == Mukey.Pedon@horizons$soil.depth,]  ;
 
+
+
 str(Mukey.deepest) ;
+
+
 
 # HansYoust_deepest<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
 
@@ -454,26 +479,78 @@ Project_deepest<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "
 
 names(Project_deepest)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD'); 
 
-Mukey.deepest.NA<-Mukey.deepest[is.na(Mukey.deepest$claytotal_r),'mukey_ID']  ;
+
+
+
+
+
+###  Select the mukeys that have variables with NA values
+
+Mukey.deepest.NA<-Project_deepest[which(is.na(Project_deepest),arr.ind=T)[,1],'MUKEY'] ;
+
+
+
+
+Mukey.deepest.1<-Mukey.Pedon@horizons[Mukey.Pedon@horizons$mukey_ID %in% Mukey.deepest.NA, ]; 
+
+
+Mukey.deepest.1.deepest<-Mukey.deepest.1[Mukey.deepest.1$hzdepb_r == Mukey.deepest.1$soil.depth,] ;
+
 
 ###    Some horizons do not have complete data for the deepest layer. Therefore the next step is to
 ### take the data from the layer inmediately above the deepest 
 
 
+### Select the mukeys in that have one horizon above the deepest horizon . This is done by checking if the mukey of the row above the depst horizon is still the same mukey 
 
-Mukey.deepest.2<-Mukey.Pedon@horizons[Mukey.Pedon@horizons$mukey_ID %in% Mukey.deepest.NA , ]; 
-
-
-Mukey.deepest_1<-Mukey.deepest.2[which(Mukey.deepest.2$hzdepb_r == Mukey.deepest.2$soil.depth)-1, c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
-
-names(Mukey.deepest_1)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
+Mukey.deepest.1.deepest.above<-Mukey.Pedon@horizons[as.integer(row.names(Mukey.deepest.1.deepest))-1,] ;
 
 
-# HansYoust_deepest[HansYoust_deepest$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest_1  ;
 
-Project_deepest[Project_deepest$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest_1  ;
 
-# HansYoust_deepest[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(HansYoust_deepest[, c('SILT',  'CLAY',	'OM',	'BD')], digits=4);
+No.above.horizon<-Mukey.deepest.1.deepest[which(Mukey.deepest.1.deepest$mukey != Mukey.deepest.1.deepest.above$mukey),];
+
+### The No.above.horizon mukeys "423299, Marsh" , "753456 Alluvial land, wet" and "1588007, Pits", do not have horizons above from where to take the data for the geology file
+
+No.above.horizon.info<-Mukey.Pedon@horizons[as.integer(row.names(No.above.horizon)),c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
+
+
+
+Mukey.deepest.2<-Mukey.deepest.1.deepest[!Mukey.deepest.1.deepest$mukey %in% No.above.horizon$mukey, ] ;
+
+
+Mukey.deepest.2.info<-Mukey.Pedon@horizons[as.integer(row.names(Mukey.deepest.2))-1,c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")]
+
+names(Mukey.deepest.2.info)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
+
+
+
+
+
+### mukey 542034 is abandoned mine pitts, this have no data at all, The data will be replaced by the average of the data available for # the neighboring triangles in each case. Therefore triangles with soil index 57 (542034) will not be used and tringles with new indeces # created with the average values from neighbouring trinagles will be used. In order to not create warnings when procesing the soil file, soil indices with no data will be filled with Standard data.
+
+
+#### The standarized arbitrary values are silt=0.33, clay=0.33. OM=0.5, BD= 1.5
+
+#Mukey.deepest.2.No.above.horizon[,c('SILT',  'CLAY',	'OM',	'BD')]<-StandardSoilValues ;
+
+###  Adding statndard soil values to the No.above.horizon.info mukeys 
+
+
+No.above.horizon.info[c("silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")]<-c(0.33, 0.33 , 0.5 , 1.5 );
+
+names(No.above.horizon.info)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
+
+### Collecting all the information together
+
+
+Mukey.deepest.3<-rbind(Mukey.deepest.2.info,No.above.horizon.info) ;
+
+
+
+
+Project_deepest[Project_deepest$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest.3  ;
+
 
 Project_deepest[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(Project_deepest[, c('SILT',  'CLAY',	'OM',	'BD')], digits=4) ;
 
@@ -562,7 +639,7 @@ Project_Geology$KINF<-Project_Geology$KSATV<-Project_Geology$KSATH<-Project_Geol
 
 #dir.create(paste0('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM_R_Scripts\\MM_PIHM_inputs\\',Project));
 
-save.image(file=paste0(RevisedOutputs.dir,'\\SoilsSurgoPIHM.RData'));
+save.image(file='SoilsSurgoPIHM.RData');
 
 
 
