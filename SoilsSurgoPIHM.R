@@ -96,6 +96,7 @@ library(ggplot2)  ;
 library(tidyr)  ;
 library(devtools) ;
 library(stats)
+library(DescTools);
 
 
 
@@ -127,7 +128,7 @@ library(stats)
 
 # HansYoust.mesh.info<-ogrInfo("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp");
 
-Project.mesh.info<-ogrInfo("MergeVectorLayer200_q25_250_3GSSURGO.shp")  ; 
+Project.mesh.info<-ogrInfo("../Oct0920191330/DomainDecomposition/MergeFeatures_q30_a1000000_o.shp")  ; 
 
 #### read the shape file that has been created in QGIS using the zonal statistics
 
@@ -135,7 +136,7 @@ Project.mesh.info<-ogrInfo("MergeVectorLayer200_q25_250_3GSSURGO.shp")  ;
 
 Project.GSSURGO<-readOGR("../Oct0920191330/DomainDecomposition/MergeFeatures_q30_a1000000_o.shp" )  ;  
 
-
+head(Project.GSSURGO@data)
 
 
 # str(HansYoust.GSSURGO) ;
@@ -174,7 +175,7 @@ Project.GSSURGO@data$MUKEYS.index<-Project.GSSURGO@data$MUKEYS.mode ;
 
 
 
-MUKEYS.INDX<-levels(Project.GSSURGO@data$MUKEYS.index)<-seq(1:length(levels(Project.GSSURGO@data$MUKEYS.index))) ;
+#MUKEYS.INDX<-levels(Project.GSSURGO@data$MUKEYS.index)<-seq(1:length(levels(Project.GSSURGO@data$MUKEYS.index))) ;# Possible origin of ordering errors of the soil file, as new soils are added the index is not upadted
 
 MUKEYS.map.1<-Project.GSSURGO@data[,c('Ele_ID', 'MUKEYS.mode', 'MUKEYS.index')]  ;
 
@@ -189,9 +190,9 @@ str(MUKEYS.map.2)
 
 
 
-write.table(MUKEYS.map.1,file='MUKEYS_MAP.txt', row.names=F , quote=F, sep = "\t") ;
+#write.table(MUKEYS.map.1,file='MUKEYS_MAP.txt', row.names=F , quote=F, sep = "\t") ;
 
-write.table(MUKEYS.map.2,file='MUKEYS_INDX.txt', row.names=F , quote=F, sep = "\t") ;
+#write.table(MUKEYS.map.2,file='MUKEYS_INDX.txt', row.names=F , quote=F, sep = "\t") ;
 
 ################################ Query the Soil Data access database with SQL through R #################
 
@@ -232,6 +233,10 @@ write.table(MUKEYS.map.2,file='MUKEYS_INDX.txt', row.names=F , quote=F, sep = "\
 
 in.statement2 <- format_SQL_in_statement(MUKEYS); 
 
+# The above is teh same as the two instructions below combined 
+# Temp_1 <- paste(MUKEYS, collapse="','") ;
+# Temp_2<- paste("('", Temp_1 , "')", sep='') ;
+
 
 
 # format query in SQL- raw data are returned
@@ -259,6 +264,22 @@ str(Pedon.info)  ;
 
 ### Map Unit No. 542043  https://casoilresource.lawr.ucdavis.edu/sde/?series=vanderlip
 
+
+### Map Unit No.753522 Houghton Muck Peatlands with no reliable data
+
+# https://nasis.sc.egov.usda.gov/NasisReportsWebSite/limsreport.aspx?report_name=Pedon+Description+html+(userpedid)&pedon_id=74WI025001
+# https://ncsslabdatamart.sc.egov.usda.gov/rptExecute.aspx?p=1603&r=1&submit1=Get+Report
+# https://ncsslabdatamart.sc.egov.usda.gov/rptExecute.aspx?p=1603&r=1&submit1=Get+Report
+
+
+
+### Map Unit No. 423299 Marsh Peatlands with no reliable data
+
+
+### Map Unit No.753456 Alluvial Wet Peatlands with no reliable data 
+
+### ### Map Unit No. 753597 and 700421  Water 
+
 ###############################################################################################################
 
 Pedon.info[Pedon.info$mukey==539762,]
@@ -272,6 +293,17 @@ Pedon.info[Pedon.info$mukey==542033,]
 Pedon.info[Pedon.info$mukey==542034,]
 
 Pedon.info[Pedon.info$mukey==542043,]
+
+Pedon.info[Pedon.info$mukey==753522,]
+
+Pedon.info[Pedon.info$mukey==423299,]
+
+
+Pedon.info[Pedon.info$mukey==753456,]
+
+Pedon.info[Pedon.info$mukey==753597,]
+
+Pedon.info[Pedon.info$mukey==700421,]
 
 
 
@@ -337,10 +369,13 @@ plot(Mukey.Pedon, name='hzname',color='dbthirdbar_r')  ;
 
 # Add soil profile depth  soil.depth
 
-
-
 Mukey.Pedon$soil.depth<-profileApply(Mukey.Pedon, FUN=max) ; 
 
+# Using the functions  profileApply and estimateSoilDepth  from the package Algorithms for Quantitative Pedology 
+# https://cran.r-project.org/web/packages/aqp/aqp.pdf 
+
+
+Mukey.Pedon$soil.depth2<-profileApply(Mukey.Pedon, estimateSoilDepth, name="hzname", top="hzdept_r",bottom="hzdepb_r" ) ; 
 
 Mukey.Pedon$hzthickns_r<-Mukey.Pedon$hzdepb_r-Mukey.Pedon$hzdept_r  ;
 
@@ -350,16 +385,10 @@ str(Mukey.Pedon) ;
 
 Mukey.Pedon@horizons<-merge(Mukey.Pedon@horizons, Mukey.Pedon@site, by.x='mukey', by.y='mukey_ID') ;
 
+Mukey_Pedon_info<-Mukey.Pedon@horizons ;
+
 
 str(Mukey.Pedon) ;
-
-# # Add soil thickness x soil bulk density / soil.depth (hzthickns_r *dbthirdbar_r)/soil.depth to estimate weight average clay,silt sand content
-# 
-# Mukey.Pedon$hzthickns_dbthirdbar_soil.depth<-(Mukey.Pedon$hzthickns_r*Mukey.Pedon$dbthirdbar_r)/Mukey.Pedon@horizons$soil.depth  ;
-# 
-# str(Mukey.Pedon) ;
-# 
-# 
 
 
 
@@ -367,8 +396,10 @@ str(Mukey.Pedon) ;
 #########  the thincknes (1cm) and the bulk density dbthirdbar_r to obtain the wieghted clay, sand, etc for pihm
 
 
-
 sliced<-aqp::slice(Mukey.Pedon, fm = 1:max(Mukey.Pedon) ~ sandtotal_r + silttotal_r + claytotal_r + om_r + dbthirdbar_r  + soil.depth + mukey.factor ) ;
+
+
+
 
 plot(sliced, name='hzname', color='om_r') ;
 
@@ -390,6 +421,7 @@ str(sliced) ;
 
 
 sliced@site$SOIL_MASS<- profileApply(sliced, FUN=function(x) sum(x$dbthirdbar_r, na.rm=T), simplify = T) ;
+
 
 sliced@site$SANDMASS<- profileApply(sliced, FUN=function(x) sum((x$sandtotal_r*x$dbthirdbar_r)/100, na.rm=T), simplify = T) ;
 
@@ -416,6 +448,8 @@ sliced@site$BULKD<-sliced@site$SOIL_MASS/sliced@site$soil.depth ;
 
 
 head(sliced@site)
+
+
 
 
 ####### write the soils data in a format that PIHM can read trough the Data model Loader step in PIHM-GIS
