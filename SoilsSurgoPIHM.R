@@ -168,32 +168,6 @@ MUKEYS<-levels(Project.GSSURGO@data$MUKEYS.mode)  ;
 str(MUKEYS)  ;
 
 
-
-#HansYoust.GSSURGO@data$MUKEYS.index<-HansYoust.GSSURGO@data$MUKEYS.mode ;
-
-Project.GSSURGO@data$MUKEYS.index<-Project.GSSURGO@data$MUKEYS.mode ;
-
-
-
-#MUKEYS.INDX<-levels(Project.GSSURGO@data$MUKEYS.index)<-seq(1:length(levels(Project.GSSURGO@data$MUKEYS.index))) ;# Possible origin of ordering errors of the soil file, as new soils are added the index is not upadted
-
-MUKEYS.map.1<-Project.GSSURGO@data[,c('Ele_ID', 'MUKEYS.mode', 'MUKEYS.index')]  ;
-
-MUKEYS.map.2<-data.frame(MUKEYS.INDX,MUKEYS) ;
-
-str(MUKEYS.map.1)
-
-str(MUKEYS.map.2)
-
-
-#paste0(inputfile.name, '.att')
-
-
-
-#write.table(MUKEYS.map.1,file='MUKEYS_MAP.txt', row.names=F , quote=F, sep = "\t") ;
-
-#write.table(MUKEYS.map.2,file='MUKEYS_INDX.txt', row.names=F , quote=F, sep = "\t") ;
-
 ################################ Query the Soil Data access database with SQL through R #################
 
 
@@ -454,14 +428,32 @@ head(sliced@site)
 
 ####### write the soils data in a format that PIHM can read trough the Data model Loader step in PIHM-GIS
 ####### include an index to replace the MUKEY with the indexs, as PIHM does not read the MUKEYS and needs an integer index instead
+sliced@site$mukey_No<-as.numeric(sliced@site$mukey_ID)
+
+str(sliced@site)
+
+str(Project.GSSURGO@data)
 
 
+MUKEYS.INDX<-data.frame(sliced@site[order(sliced@site$mukey_No),c('mukey_No','mukey_ID')],seq(1:length(sliced@site$mukey_No))) ;
+names(MUKEYS.INDX)<-c('mukey_No',"mukey_ID","mukey_Index" ) ;
+  
+str(MUKEYS.INDX)
+
+
+MUKEYS.MAP<-merge(Project.GSSURGO@data,MUKEYS.INDX, by.x="GSURGO_Mod", by.y="mukey_No", all.x=T )
+
+str(MUKEYS.MAP)
+
+### combine the information and prepare it to create the .soil file
 
 # HansYoust_Soil<-merge(sliced@site[, c("mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")], MUKEYS.map.2, by.x='mukey_ID', by.y='MUKEYS', all=T) ;
 
-Project_Soil<-merge(sliced@site[, c("mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")], MUKEYS.map.2, by.x='mukey_ID', by.y='MUKEYS', all=T) ;
+Project_Soil<-merge(sliced@site[, c("mukey_No", "mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")], MUKEYS.INDX, by=c('mukey_No', 'mukey_ID') , all=T) ;
 
+### order the dataframe by the mukey_Index 
 
+Project_Soil<-Project_Soil[order(Project_Soil$mukey_Index),]
 
 # HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(HansYoust_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")], digits=4)
 
