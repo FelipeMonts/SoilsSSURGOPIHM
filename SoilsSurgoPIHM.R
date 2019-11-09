@@ -484,11 +484,19 @@ Project_Soil$KINF<-Project_Soil$KSATV<-Project_Soil$KSATH<-Project_Soil$MAXSMC<-
 # ###########################################################################################################################
 
 
-Neeed to compare the dominant selected components of the Geology file with the ones selected for the soil files. There seesm to be some differences.
+
+#Do not starrt from Mukey.Pedon@horizons start from the final file of soils with information.
+
+str(Project_Soil) ;
+
+str(Mukey.Pedon@horizons) ;
+
+Geology.Mukeys<-Mukey.Pedon@horizons[Mukey.Pedon@horizons$mukey %in% as.integer(Project_Soil$MUKEY),] ;
+
+Geology.NA.Mukeys<-Mukey.Pedon@horizons[!Mukey.Pedon@horizons$mukey %in% as.integer(Project_Soil$MUKEY),] ;
 
 
-Mukey.deepest<-Mukey.Pedon@horizons[Mukey.Pedon@horizons$hzdepb_r == Mukey.Pedon@horizons$soil.depth,]  ;
-
+Mukey.deepest<-Geology.Mukeys[Geology.Mukeys$hzdepb_r == Mukey.Pedon@horizons$soil.depth,]  ;
 
 
 str(Mukey.deepest) ;
@@ -497,7 +505,7 @@ str(Mukey.deepest) ;
 
 # HansYoust_deepest<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
 
-Project_deepest<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
+Project_deepest<-Mukey.deepest[order(Mukey.deepest$mukey) , c("mukey", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
 
 
 
@@ -505,14 +513,14 @@ Project_deepest<-Mukey.deepest [, c("mukey_ID", "silttotal_r", "claytotal_r" , "
 
 names(Project_deepest)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD'); 
 
-
+str(Project_deepest)
 
 
 
 
 ###  Select the mukeys that have variables with NA values
 
-Mukey.deepest.NA<-Project_deepest[which(is.na(Project_deepest),arr.ind=T)[,1],'MUKEY'] ;
+Mukey.deepest.NA<-unique(Project_deepest[which(is.na(Project_deepest),arr.ind=T)[,1],'MUKEY']) ;
 
 
 
@@ -529,7 +537,7 @@ Mukey.deepest.1.deepest<-Mukey.deepest.1[Mukey.deepest.1$hzdepb_r == Mukey.deepe
 
 ### Select the mukeys in that have one horizon above the deepest horizon . This is done by checking if the mukey of the row above the depst horizon is still the same mukey 
 
-Mukey.deepest.1.deepest.above<-Mukey.Pedon@horizons[as.integer(row.names(Mukey.deepest.1.deepest))-1,] ;
+Mukey.deepest.1.deepest.above<-Geology.Mukeys[as.integer(row.names(Mukey.deepest.1.deepest))-1,] ;
 
 
 
@@ -537,8 +545,9 @@ Mukey.deepest.1.deepest.above<-Mukey.Pedon@horizons[as.integer(row.names(Mukey.d
 No.above.horizon<-Mukey.deepest.1.deepest[which(Mukey.deepest.1.deepest$mukey != Mukey.deepest.1.deepest.above$mukey),];
 
 ### The No.above.horizon mukeys "423299, Marsh" , "753456 Alluvial land, wet" and "1588007, Pits", do not have horizons above from where to take the data for the geology file
+str(Mukey.Pedon@horizons)
 
-No.above.horizon.info<-Mukey.Pedon@horizons[as.integer(row.names(No.above.horizon)),c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
+No.above.horizon.info<-Mukey.Pedon@horizons[as.integer(row.names(No.above.horizon)),c("compname" ,"mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")] ;
 
 
 
@@ -547,8 +556,15 @@ Mukey.deepest.2<-Mukey.deepest.1.deepest[!Mukey.deepest.1.deepest$mukey %in% No.
 
 Mukey.deepest.2.info<-Mukey.Pedon@horizons[as.integer(row.names(Mukey.deepest.2))-1,c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")]
 
-names(Mukey.deepest.2.info)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
+names(Mukey.deepest.2.info)<-c("mukey_ID",'SILT',  'CLAY',	'OM',	'BD');
 
+Mukey.deepest.2.info$MUKEY<-as.integer(Mukey.deepest.2.info$mukey_ID);
+
+### Matching the Horizons that have data in the layer above the missing layer data with the missing data horizons in teh geology file
+str(Project_deepest)
+str(Mukey.deepest.2.info)
+
+Project_deepest[Project_deepest$MUKEY %in% Mukey.deepest.2.info$MUKEY,c('SILT',  'CLAY',	'OM',	'BD')]<-Mukey.deepest.2.info[,c('SILT',  'CLAY',	'OM',	'BD')]
 
 
 
@@ -556,29 +572,37 @@ names(Mukey.deepest.2.info)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
 ### mukey 542034 is abandoned mine pitts, this have no data at all, The data will be replaced by the average of the data available for # the neighboring triangles in each case. Therefore triangles with soil index 57 (542034) will not be used and tringles with new indeces # created with the average values from neighbouring trinagles will be used. In order to not create warnings when procesing the soil file, soil indices with no data will be filled with Standard data.
 
 
-#### The standarized arbitrary values are silt=0.33, clay=0.33. OM=0.5, BD= 1.5
 
-#Mukey.deepest.2.No.above.horizon[,c('SILT',  'CLAY',	'OM',	'BD')]<-StandardSoilValues ;
-
-###  Adding statndard soil values to the No.above.horizon.info mukeys 
-
-
-No.above.horizon.info[c("silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")]<-c(0.33, 0.33 , 0.5 , 1.5 );
-
-names(No.above.horizon.info)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
-
-### Collecting all the information together
-
-
-Mukey.deepest.3<-rbind(Mukey.deepest.2.info,No.above.horizon.info) ;
-
-
-
-
-Project_deepest[Project_deepest$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest.3  ;
-
-
-Project_deepest[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(Project_deepest[, c('SILT',  'CLAY',	'OM',	'BD')], digits=4) ;
+# ##############################################################################################################################################################
+# 
+# #### If standard values are to be added to missing data the following comented code will do it 
+# 
+# 
+# #### The standarized arbitrary values are silt=0.33, clay=0.33. OM=0.5, BD= 1.5
+# 
+# #Mukey.deepest.2.No.above.horizon[,c('SILT',  'CLAY',	'OM',	'BD')]<-StandardSoilValues ;
+# 
+# ###  Adding statndard soil values to the No.above.horizon.info mukeys 
+# 
+# 
+# No.above.horizon.info[c("silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")]<-c(0.33, 0.33 , 0.5 , 1.5 );
+# 
+# names(No.above.horizon.info)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD');
+# 
+# ### Collecting all the information together
+# 
+# 
+# Mukey.deepest.3<-rbind(Mukey.deepest.2.info,No.above.horizon.info) ;
+# 
+# 
+# 
+# 
+# Project_deepest[Project_deepest$MUKEY %in% Mukey.deepest.NA, ]<-Mukey.deepest.3  ;
+# 
+# 
+# Project_deepest[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(Project_deepest[, c('SILT',  'CLAY',	'OM',	'BD')], digits=4) ;
+# 
+# ##############################################################################################################################################################
 
 ####### write the geology data in a format that PIHM can read trough the Data model Loader step in PIHM-GIS
 ####### include an index to replace the MUKEY with the index, as PIHM does not read the MUKEYS and needs an integer index instead
@@ -586,7 +610,7 @@ Project_deepest[, c('SILT',  'CLAY',	'OM',	'BD')] <-signif(Project_deepest[, c('
 
 # HansYoust_Geology<-merge(HansYoust_deepest, MUKEYS.map.2, by.x='MUKEY', by.y='MUKEYS', all=T) ;
 
-Project_Geology<-merge(Project_deepest, MUKEYS.map.2, by.x='MUKEY', by.y='MUKEYS', all=T) ;
+Project_Geology<-merge(Project_deepest, MUKEYS.INDX[,c('mukey_No', 'mukey_Index')], by.x='MUKEY', by.y='mukey_No', all=T) ;
 
 
 # names(HansYoust_Geology)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
