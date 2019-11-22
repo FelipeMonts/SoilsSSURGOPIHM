@@ -472,7 +472,9 @@ Project_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(Project_Soil[,c("SILT"
 
 # names(HansYoust_Soil)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
 
-names(Project_Soil)[1:6]<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX') ;
+str(Project_Soil)
+
+names(Project_Soil)[c(1,3:7)]<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX') ;
 
 str(Project_Soil) ;
 
@@ -631,13 +633,11 @@ names(Project_Geology.Basic)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX');
 
 str(Mukey_Pedon_info)
 
-str(Project_Geology) ;
+str(Project_Geology.Basic) ;
  
 unique(Mukey_Pedon_info[,c('mukey','compname', 'taxorder' , 'taxsuborder', 'taxgrtgroup' , 'taxsubgrp')])
 
 Project_Geology<-merge(Project_Geology.Basic, unique(Mukey_Pedon_info[,c('mukey','compname', 'taxorder' , 'taxsuborder', 'taxgrtgroup' , 'taxsubgrp')]), by.x='MUKEY', by.y="mukey")
-
-
 
 str(Project_Geology) ;
 
