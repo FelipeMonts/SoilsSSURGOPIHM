@@ -215,7 +215,7 @@ in.statement2 <- format_SQL_in_statement(MUKEYS);
 
 # format query in SQL- raw data are returned
 
-Pedon.query<- paste0("SELECT component.mukey, component.cokey, compname, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r,hzthk_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement2," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
+Pedon.query<- paste0("SELECT component.mukey, component.cokey, component.compname, component.taxorder, component.taxsuborder, component.taxgrtgroup, component.taxsubgrp, comppct_r, majcompflag, slope_r, hzdept_r, hzdepb_r,hzthk_r, hzname, awc_r, sandtotal_r, silttotal_r, claytotal_r, om_r,dbtenthbar_r, dbthirdbar_r, dbfifteenbar_r, fraggt10_r, frag3to10_r, sieveno10_r, sieveno40_r, sieveno200_r, ksat_r  FROM component JOIN chorizon ON component.cokey = chorizon.cokey AND mukey IN ", in.statement2," ORDER BY mukey, comppct_r DESC, hzdept_r ASC") ;
 
 # now get component and horizon-level data for these map unit keys
 Pedon.info<- SDA_query(Pedon.query);
@@ -449,7 +449,18 @@ str(MUKEYS.MAP)
 
 # HansYoust_Soil<-merge(sliced@site[, c("mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")], MUKEYS.map.2, by.x='mukey_ID', by.y='MUKEYS', all=T) ;
 
-Project_Soil<-merge(sliced@site[, c("mukey_No", "mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")], MUKEYS.INDX, by=c('mukey_No', 'mukey_ID') , all=T) ;
+
+Project_Soil.basic<-merge(sliced@site[, c("mukey_No", "mukey_ID", "SILT", "CLAY" , "OM" , "BULKD")], MUKEYS.INDX, by=c('mukey_No', 'mukey_ID') , all=T) ;
+
+str(Project_Soil.basic)
+
+str(Mukey_Pedon_info)
+
+Mukey_Pedon_info$mukey_No<-as.numeric(Mukey_Pedon_info$mukey) ;
+
+str(Mukey_Pedon_info)
+
+Project_Soil<-merge(Project_Soil.basic, Mukey_Pedon_info[,c('mukey_No','compname', 'taxorder' , 'taxsuborder', 'taxgrtgroup' , 'taxsubgrp')], by='mukey_No', all.x=T)
 
 ### order the dataframe by the mukey_Index 
 
@@ -461,7 +472,7 @@ Project_Soil[,c("SILT", "CLAY" , "OM" , "BULKD")]<-signif(Project_Soil[,c("SILT"
 
 # names(HansYoust_Soil)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
 
-names(Project_Soil)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX') ;
+names(Project_Soil)[1:6]<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX') ;
 
 str(Project_Soil) ;
 
@@ -556,7 +567,7 @@ Mukey.deepest.2<-Mukey.deepest.1.deepest[!Mukey.deepest.1.deepest$mukey %in% No.
 
 Mukey.deepest.2.info<-Mukey.Pedon@horizons[as.integer(row.names(Mukey.deepest.2))-1,c("mukey_ID", "silttotal_r", "claytotal_r" , "om_r" , "dbthirdbar_r")]
 
-names(Mukey.deepest.2.info)<-c("mukey_ID",'SILT',  'CLAY',	'OM',	'BD');
+names(Mukey.deepest.2.info)[1:5]<-c("mukey_ID",'SILT',  'CLAY',	'OM',	'BD');
 
 Mukey.deepest.2.info$MUKEY<-as.integer(Mukey.deepest.2.info$mukey_ID);
 
@@ -610,12 +621,23 @@ Project_deepest[Project_deepest$MUKEY %in% Mukey.deepest.2.info$MUKEY,c('SILT', 
 
 # HansYoust_Geology<-merge(HansYoust_deepest, MUKEYS.map.2, by.x='MUKEY', by.y='MUKEYS', all=T) ;
 
-Project_Geology<-merge(Project_deepest, MUKEYS.INDX[,c('mukey_No', 'mukey_Index')], by.x='MUKEY', by.y='mukey_No', all=T) ;
+Project_Geology.Basic<-merge(Project_deepest, MUKEYS.INDX[,c('mukey_No', 'mukey_Index')], by.x='MUKEY', by.y='mukey_No', all=T) ;
 
 
 # names(HansYoust_Geology)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
 
-names(Project_Geology)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
+names(Project_Geology.Basic)<-c('MUKEY','SILT',  'CLAY',	'OM',	'BD', 'INDEX'); 
+
+
+str(Mukey_Pedon_info)
+
+str(Project_Geology) ;
+ 
+unique(Mukey_Pedon_info[,c('mukey','compname', 'taxorder' , 'taxsuborder', 'taxgrtgroup' , 'taxsubgrp')])
+
+Project_Geology<-merge(Project_Geology.Basic, unique(Mukey_Pedon_info[,c('mukey','compname', 'taxorder' , 'taxsuborder', 'taxgrtgroup' , 'taxsubgrp')]), by.x='MUKEY', by.y="mukey")
+
+
 
 str(Project_Geology) ;
 
