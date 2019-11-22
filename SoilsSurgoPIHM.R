@@ -460,7 +460,7 @@ Mukey_Pedon_info$mukey_No<-as.numeric(Mukey_Pedon_info$mukey) ;
 
 str(Mukey_Pedon_info)
 
-Project_Soil<-merge(Project_Soil.basic, Mukey_Pedon_info[,c('mukey_No','compname', 'taxorder' , 'taxsuborder', 'taxgrtgroup' , 'taxsubgrp')], by='mukey_No', all.x=T)
+Project_Soil<-merge(Project_Soil.basic,unique(Mukey_Pedon_info[,c('mukey_No','compname', 'taxorder' , 'taxsuborder', 'taxgrtgroup' , 'taxsubgrp')]), by='mukey_No', all.x=T)
 
 ### order the dataframe by the mukey_Index 
 
