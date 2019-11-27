@@ -366,6 +366,9 @@ str(Mukey.Pedon) ;
 
 
 
+
+
+
 ######### Use the slice tool to divide the horizons into 1 cm layers and sum the components (clay, sand, silt) multiplied by 
 #########  the thincknes (1cm) and the bulk density dbthirdbar_r to obtain the wieghted clay, sand, etc for pihm
 
@@ -485,7 +488,12 @@ head(Project_Soil) ;
 
 # HansYoust_Soil$KINF<-HansYoust_Soil$KSATV<-HansYoust_Soil$KSATH<-HansYoust_Soil$MAXSMC<-HansYoust_Soil$MINSMC<-HansYoust_Soil$ALPHA<-HansYoust_Soil$BETA<-HansYoust_Soil$MACHF<-HansYoust_Soil$MACVF<-HansYoust_Soil$DMAC<-HansYoust_Soil$QTZ<- -999 ;
 
-Project_Soil$KINF<-Project_Soil$KSATV<-Project_Soil$KSATH<-Project_Soil$MAXSMC<-Project_Soil$MINSMC<-Project_Soil$ALPHA<-Project_Soil$BETA<-Project_Soil$MACHF<-Project_Soil$MACVF<-Project_Soil$DMAC<-Project_Soil$QTZ<- -999 ;
+Project_Soil$KINF<-Project_Soil$KSATV<-Project_Soil$KSATH<-Project_Soil$MAXSMC<-Project_Soil$MINSMC<-Project_Soil$ALPHA<-Project_Soil$BETA<-Project_Soil$QTZ<- -999 ;
+
+Project_Soil$MACHF<-Project_Soil$MACVF<-0.01
+  
+Project_Soil$DMAC<-1.0
+
 
 
 
@@ -498,7 +506,7 @@ Project_Soil$KINF<-Project_Soil$KSATV<-Project_Soil$KSATH<-Project_Soil$MAXSMC<-
 
 
 
-#Do not starrt from Mukey.Pedon@horizons start from the final file of soils with information.
+#Do not start from Mukey.Pedon@horizons start from the final file of soils with information.
 
 str(Project_Soil) ;
 
@@ -651,7 +659,12 @@ NUMGEOL<-data.frame(c('NUMGEOL'), dim(Project_Geology)[1]) ;
 
 # HansYoust_Geology$KINF<-HansYoust_Geology$KSATV<-HansYoust_Geology$KSATH<-HansYoust_Geology$MAXSMC<-HansYoust_Geology$MINSMC<-HansYoust_Geology$ALPHA<-HansYoust_Geology$BETA<-HansYoust_Geology$MACHF<-HansYoust_Geology$MACVF<-HansYoust_Geology$DMAC<-HansYoust_Geology$QTZ<- -999 ;
 
-Project_Geology$KINF<-Project_Geology$KSATV<-Project_Geology$KSATH<-Project_Geology$MAXSMC<-Project_Geology$MINSMC<-Project_Geology$ALPHA<-Project_Geology$BETA<-Project_Geology$MACHF<-Project_Geology$MACVF<-Project_Geology$DMAC<-Project_Geology$QTZ<- -999 ;
+Project_Geology$KINF<-Project_Geology$KSATV<-Project_Geology$KSATH<-Project_Geology$MAXSMC<-Project_Geology$MINSMC<-Project_Geology$ALPHA<-Project_Geology$BETA<-Project_Geology$QTZ<- -999 ;
+
+Project_Geology$MACHF<-Project_Geology$MACVF<-0.01
+
+Project_Geology$DMAC<-1.0
+
 
 
 
