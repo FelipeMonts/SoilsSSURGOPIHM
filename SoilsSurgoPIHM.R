@@ -34,8 +34,9 @@
 
 #      set the working directory
 
+readClipboard()
 
-setwd('C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM SIMULATIONS\\YAHARA\\MM_PHIM_inputs') ;       #  setwd(RevisedOutputs.dir)   ;
+setwd("C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM SIMULATIONS\\YAHARA\\Yahara20200110\\MMPIHM_inputs") ;       #  setwd(RevisedOutputs.dir)   ;
 
 
 
@@ -128,13 +129,15 @@ library(DescTools);
 
 # HansYoust.mesh.info<-ogrInfo("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp");
 
-Project.mesh.info<-ogrInfo("../Oct0920191330/DomainDecomposition/MergeFeatures_q30_a1000000_o.shp")  ; 
+readClipboard()
+
+Project.mesh.info<-ogrInfo("C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM SIMULATIONS\\YAHARA\\Yahara20200110\\Jan1020201420\\3DomainDecomposition\\MergefeaturesModExploded20200110_q30_a1000000.shp")  ; 
 
 #### read the shape file that has been created in QGIS using the zonal statistics
 
 # HansYoust.GSSURGO<-readOGR("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/GSSURGO/HY_GSURGO.shp")  ;
 
-Project.GSSURGO<-readOGR("../Oct0920191330/DomainDecomposition/MergeFeatures_q30_a1000000_o.shp" )  ;  
+Project.GSSURGO<-readOGR("C:\\Felipe\\PIHM-CYCLES\\PIHM\\PIHM SIMULATIONS\\YAHARA\\Yahara20200110\\Jan1020201420\\3DomainDecomposition\\MergefeaturesModExploded20200110_q30_a1000000.shp" )  ;  
 
 head(Project.GSSURGO@data)
 
@@ -158,7 +161,7 @@ str(Project.GSSURGO@data)  ;
 
 # HansYoust.GSSURGO@data$MUKEYS.mode<-as.factor(HansYoust.GSSURGO@data$SSURGO_mod) ;
 
-Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$GSURGO_Mod) ;
+Project.GSSURGO@data$MUKEYS.mode<-as.factor(Project.GSSURGO@data$GSURGO_maj) ;
 
 
 #MUKEYS<-levels(HansYoust.GSSURGO@data$MUKEYS.mode)  ;
